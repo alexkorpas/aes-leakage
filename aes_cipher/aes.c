@@ -1,4 +1,50 @@
+/**
+ * \file FIPS-197 AES-128 software library source file
+ *
+ * Copyright (c) 2015 Atmel Corporation. All rights reserved.
+ *
+ * \asf_license_start
+ *
+ * \page License
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ * 3. The name of Atmel may not be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * 4. This software may only be redistributed and used in connection with an
+ *    Atmel microcontroller product.
+ *
+ * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
+ * EXPRESSLY AND SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * \asf_license_stop
+ *
+ */
+/**
+ * Support and FAQ: visit <a href="http://www.atmel.com/design-support/">Atmel Support</a>
+ */
+
 #include "aes.h"
+
+/* Global Variables declaration*/
 
 /*  S-box in hexadecimal format */
 uint8_t sbox[256] = {
@@ -42,13 +88,6 @@ uint8_t inv_sbox[256] = {
     0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d  // F
 };
 
-/* Round constant for Key Expansion 
-   rcon[0] is not defined, but is used for indexing purposes */
-uint8_t rcon[11] = {0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36};
-
-/* Array to store values after key expansion */
-uint8_t key_schedule[AES_KEY_SCHEDULE_SIZE];
-
 /* Round constant for Key Expansion */
 uint8_t RCon[11] = {0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36};
 
@@ -75,7 +114,7 @@ void KeyExpansion(uint8_t *round_key, uint8_t *key)
 	// Compute Key schedule of block size for each round
 	for (i = 1; i < (AES_NUM_OF_ROUNDS + 1); i++) {
 		temp                  = round_key[i * 16 - 4];
-        round_key[i * 16 + 0] = sbox[round_key[i * 16 - 3]] ^ round_key[(i - 1) * 16 + 0] ^ rcon[i];
+		round_key[i * 16 + 0] = sbox[round_key[i * 16 - 3]] ^ round_key[(i - 1) * 16 + 0] ^ RCon[i];
 		round_key[i * 16 + 1] = sbox[round_key[i * 16 - 2]] ^ round_key[(i - 1) * 16 + 1];
 		round_key[i * 16 + 2] = sbox[round_key[i * 16 - 1]] ^ round_key[(i - 1) * 16 + 2];
 		round_key[i * 16 + 3] = sbox[temp] ^ round_key[(i - 1) * 16 + 3];
@@ -94,6 +133,23 @@ void KeyExpansion(uint8_t *round_key, uint8_t *key)
 		round_key[i * 16 + 13] = round_key[(i - 1) * 16 + 13] ^ round_key[i * 16 + 9];
 		round_key[i * 16 + 14] = round_key[(i - 1) * 16 + 14] ^ round_key[i * 16 + 10];
 		round_key[i * 16 + 15] = round_key[(i - 1) * 16 + 15] ^ round_key[i * 16 + 11];
+	}
+}
+
+/*! \brief xtime calculation
+ * The value is multiplied by 0x02. This
+ * is implemented at the byte level as a
+ * left shift and XOR with 0x1b if the MSB
+ * of the value (before) shifting is 1.	
+ * \param value  Value for which multiplication to be done
+ */
+uint8_t xtime(uint8_t value)
+{
+	if (value >> 7) {
+		value = value << 1;
+		return (value ^ 0x1b);
+	} else {
+		return value << 1;
 	}
 }
 
@@ -138,7 +194,71 @@ void SubBytes_ShiftRows(uint8_t *state)
  */
 void MixColumnns(uint8_t *state)
 {
+	uint8_t temp1 = 0, temp2 = 0, temp3 = 0;
 
+	// col 1
+	temp1    = state[0] ^ state[1] ^ state[2] ^ state[3];
+	temp2    = state[0];
+	temp3    = state[0] ^ state[1];
+	temp3    = xtime(temp3);
+	state[0] = state[0] ^ temp3 ^ temp1;
+	temp3    = state[1] ^ state[2];
+	temp3    = xtime(temp3);
+	state[1] = state[1] ^ temp3 ^ temp1;
+	temp3    = state[2] ^ state[3];
+	temp3    = xtime(temp3);
+	state[2] = state[2] ^ temp3 ^ temp1;
+	temp3    = state[3] ^ temp2;
+	temp3    = xtime(temp3);
+	state[3] = state[3] ^ temp3 ^ temp1;
+
+	// col 2
+	temp1    = state[4] ^ state[5] ^ state[6] ^ state[7];
+	temp2    = state[4];
+	temp3    = state[4] ^ state[5];
+	temp3    = xtime(temp3);
+	state[4] = state[4] ^ temp3 ^ temp1;
+	temp3    = state[5] ^ state[6];
+	temp3    = xtime(temp3);
+	state[5] = state[5] ^ temp3 ^ temp1;
+	temp3    = state[6] ^ state[7];
+	temp3    = xtime(temp3);
+	state[6] = state[6] ^ temp3 ^ temp1;
+	temp3    = state[7] ^ temp2;
+	temp3    = xtime(temp3);
+	state[7] = state[7] ^ temp3 ^ temp1;
+
+	// col 3
+	temp1     = state[8] ^ state[9] ^ state[10] ^ state[11];
+	temp2     = state[8];
+	temp3     = state[8] ^ state[9];
+	temp3     = xtime(temp3);
+	state[8]  = state[8] ^ temp3 ^ temp1;
+	temp3     = state[9] ^ state[10];
+	temp3     = xtime(temp3);
+	state[9]  = state[9] ^ temp3 ^ temp1;
+	temp3     = state[10] ^ state[11];
+	temp3     = xtime(temp3);
+	state[10] = state[10] ^ temp3 ^ temp1;
+	temp3     = state[11] ^ temp2;
+	temp3     = xtime(temp3);
+	state[11] = state[11] ^ temp3 ^ temp1;
+
+	// col 4
+	temp1     = state[12] ^ state[13] ^ state[14] ^ state[15];
+	temp2     = state[12];
+	temp3     = state[12] ^ state[13];
+	temp3     = xtime(temp3);
+	state[12] = state[12] ^ temp3 ^ temp1;
+	temp3     = state[13] ^ state[14];
+	temp3     = xtime(temp3);
+	state[13] = state[13] ^ temp3 ^ temp1;
+	temp3     = state[14] ^ state[15];
+	temp3     = xtime(temp3);
+	state[14] = state[14] ^ temp3 ^ temp1;
+	temp3     = state[15] ^ temp2;
+	temp3     = xtime(temp3);
+	state[15] = state[15] ^ temp3 ^ temp1;
 }
 
 /*! \brief Performs Add RoundKey  operation.
@@ -248,5 +368,230 @@ void Inv_AddRoundKey(uint8_t *state, uint8_t round)
  */
 void Inv_MixColumns(uint8_t *state, uint8_t round)
 {
+	uint8_t temp1 = 0, temp2 = 0, temp3 = 0;
 
+	// col1
+	temp1 = xtime(xtime(state[0] ^ state[2]));
+	temp2 = xtime(xtime(state[1] ^ state[3]));
+	state[0] ^= temp1;
+	state[1] ^= temp2;
+	state[2] ^= temp1;
+	state[3] ^= temp2;
+
+	// col2
+	temp1 = xtime(xtime(state[4] ^ state[6]));
+	temp2 = xtime(xtime(state[5] ^ state[7]));
+	state[4] ^= temp1;
+	state[5] ^= temp2;
+	state[6] ^= temp1;
+	state[7] ^= temp2;
+
+	// col3
+	temp1 = xtime(xtime(state[8] ^ state[10]));
+	temp2 = xtime(xtime(state[9] ^ state[11]));
+	state[8] ^= temp1;
+	state[9] ^= temp2;
+	state[10] ^= temp1;
+	state[11] ^= temp2;
+
+	// col4
+	temp1 = xtime(xtime(state[12] ^ state[14]));
+	temp2 = xtime(xtime(state[13] ^ state[15]));
+	state[12] ^= temp1;
+	state[13] ^= temp2;
+	state[14] ^= temp1;
+	state[15] ^= temp2;
+
+	// col1
+	temp1    = state[0] ^ state[1] ^ state[2] ^ state[3];
+	temp2    = state[0];
+	temp3    = state[0] ^ state[1];
+	temp3    = xtime(temp3);
+	state[0] = state[0] ^ temp3 ^ temp1;
+	temp3    = state[1] ^ state[2];
+	temp3    = xtime(temp3);
+	state[1] = state[1] ^ temp3 ^ temp1;
+	temp3    = state[2] ^ state[3];
+	temp3    = xtime(temp3);
+	state[2] = state[2] ^ temp3 ^ temp1;
+	temp3    = state[3] ^ temp2;
+	temp3    = xtime(temp3);
+	state[3] = state[3] ^ temp3 ^ temp1;
+
+	// col2
+	temp1    = state[4] ^ state[5] ^ state[6] ^ state[7];
+	temp2    = state[4];
+	temp3    = state[4] ^ state[5];
+	temp3    = xtime(temp3);
+	state[4] = state[4] ^ temp3 ^ temp1;
+	temp3    = state[5] ^ state[6];
+	temp3    = xtime(temp3);
+	state[5] = state[5] ^ temp3 ^ temp1;
+	temp3    = state[6] ^ state[7];
+	temp3    = xtime(temp3);
+	state[6] = state[6] ^ temp3 ^ temp1;
+	temp3    = state[7] ^ temp2;
+	temp3    = xtime(temp3);
+	state[7] = state[7] ^ temp3 ^ temp1;
+
+	// col3
+	temp1     = state[8] ^ state[9] ^ state[10] ^ state[11];
+	temp2     = state[8];
+	temp3     = state[8] ^ state[9];
+	temp3     = xtime(temp3);
+	state[8]  = state[8] ^ temp3 ^ temp1;
+	temp3     = state[9] ^ state[10];
+	temp3     = xtime(temp3);
+	state[9]  = state[9] ^ temp3 ^ temp1;
+	temp3     = state[10] ^ state[11];
+	temp3     = xtime(temp3);
+	state[10] = state[10] ^ temp3 ^ temp1;
+	temp3     = state[11] ^ temp2;
+	temp3     = xtime(temp3);
+	state[11] = state[11] ^ temp3 ^ temp1;
+
+	// col4
+	temp1     = state[12] ^ state[13] ^ state[14] ^ state[15];
+	temp2     = state[12];
+	temp3     = state[12] ^ state[13];
+	temp3     = xtime(temp3);
+	state[12] = state[12] ^ temp3 ^ temp1;
+	temp3     = state[13] ^ state[14];
+	temp3     = xtime(temp3);
+	state[13] = state[13] ^ temp3 ^ temp1;
+	temp3     = state[14] ^ state[15];
+	temp3     = xtime(temp3);
+	state[14] = state[14] ^ temp3 ^ temp1;
+	temp3     = state[15] ^ temp2;
+	temp3     = xtime(temp3);
+	state[15] = state[15] ^ temp3 ^ temp1;
+}
+
+/*! \brief Performs Key Expansion
+ * \param key  Initial Key vectors received from user
+ */
+void aes_init(uint8_t *key)
+{
+	KeyExpansion(key_schedule, key);
+	// Set key ready flag to true to indicate key is ready for AES algorithm
+	aes_key_ready = true;
+}
+
+/*! \brief Performs AES-128 Encryption
+ * \param plainText  Input plain text block
+ * \param state Variable to store the intermediate result
+ * \retval ERR_NO_KEY if key expansion is not done via aes_init()
+ * \retval STATUS_OKAY if aes_init() is called before this function.
+ */
+aes_ret_status_t aes_cipher(uint8_t *plainText, uint8_t *state)
+{
+	uint8_t byte_count = 0;
+	uint8_t round      = 0;
+
+	// Check if the aes_init() is called for key expansion
+	if (aes_key_ready != true)
+		return ERR_NO_KEY;
+
+	// Copy input buffer to state to form the cipher state
+	for (byte_count = 0; byte_count < AES_BLOCK_SIZE; byte_count++) {
+		state[byte_count] = plainText[byte_count];
+	}
+
+	// Round 0
+	state[0] ^= key_schedule[0];
+	state[1] ^= key_schedule[1];
+	state[2] ^= key_schedule[2];
+	state[3] ^= key_schedule[3];
+	state[4] ^= key_schedule[4];
+	state[5] ^= key_schedule[5];
+	state[6] ^= key_schedule[6];
+	state[7] ^= key_schedule[7];
+	state[8] ^= key_schedule[8];
+	state[9] ^= key_schedule[9];
+	state[10] ^= key_schedule[10];
+	state[11] ^= key_schedule[11];
+	state[12] ^= key_schedule[12];
+	state[13] ^= key_schedule[13];
+	state[14] ^= key_schedule[14];
+	state[15] ^= key_schedule[15];
+
+	// Round 1 to 9
+	for (round = 1; round < 10; round++) {
+		/* Sub Bytes and Shift Rows */
+		SubBytes_ShiftRows(state);
+		/* Mix Columns */
+		MixColumnns(state);
+		/* Add RoundKey */
+		AddRoundKey(state, round);
+	}
+
+	// 10th round without mix columns
+	round = 10;
+
+	/* Sub Bytes and Shift Rows */
+	SubBytes_ShiftRows(state);
+	/* Add RoundKey */
+	AddRoundKey(state, round);
+
+	return STATUS_OKAY;
+}
+
+/*! \brief Performs AES-128 Decryption
+ * \param cipherText  Input cipher text block
+ * \param state Variable to store the intermediate result
+ * \retval ERR_NO_KEY if key expansion is not done vis aes_init()
+ * \retval STATUS_OKAY if aes_init() is called before this function.
+ */
+aes_ret_status_t aes_inverse_cipher(uint8_t *cipherText, uint8_t *state)
+{
+
+	uint8_t round      = 0;
+	uint8_t byte_count = 0;
+
+	// Check if the aes_init() is called for key expansion
+	if (aes_key_ready != true)
+		return ERR_NO_KEY;
+
+	// Copy input buffer to state to form the plain text
+	for (byte_count = 0; byte_count < AES_BLOCK_SIZE; byte_count++) {
+		state[byte_count] = cipherText[byte_count];
+	}
+
+	// Initial addroundkey
+	state[0] ^= key_schedule[160];
+	state[1] ^= key_schedule[161];
+	state[2] ^= key_schedule[162];
+	state[3] ^= key_schedule[163];
+	state[4] ^= key_schedule[164];
+	state[5] ^= key_schedule[165];
+	state[6] ^= key_schedule[166];
+	state[7] ^= key_schedule[167];
+	state[8] ^= key_schedule[168];
+	state[9] ^= key_schedule[169];
+	state[10] ^= key_schedule[170];
+	state[11] ^= key_schedule[171];
+	state[12] ^= key_schedule[172];
+	state[13] ^= key_schedule[173];
+	state[14] ^= key_schedule[174];
+	state[15] ^= key_schedule[175];
+
+	// Round 9 to 1
+	for (round = 9; round > 0; round--) {
+		/* Inverse Sub Bytes and Shift Rows */
+		Inv_ShiftRows_SubBytes(state);
+		/* Inverse Add Round Key */
+		Inv_AddRoundKey(state, round);
+		/* Inverse Mix Columns */
+		Inv_MixColumns(state, round);
+	}
+
+	// Round 0 without mixcols
+	round = 0;
+
+	/* Inverse Sub Bytes and Shift Rows */
+	Inv_ShiftRows_SubBytes(state);
+	/* Inverse Add Round Key */
+	Inv_AddRoundKey(state, round);
+
+	return STATUS_OKAY;
 }

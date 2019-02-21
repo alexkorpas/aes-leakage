@@ -1,4 +1,7 @@
-#include <compiler.h>
+// #include <compiler.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 // AES block size in bytes
 #define AES_BLOCK_SIZE 16
