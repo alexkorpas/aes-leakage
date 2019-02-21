@@ -43,15 +43,10 @@
  * Support and FAQ: visit <a href="http://www.atmel.com/design-support/">Atmel Support</a>
  */
 
-#include <atmel_start.h>
 #include <stdio.h>
-#include "usart_io.h"
 #include "conf_example.h"
 #include "crypt.h"
 
-#if defined(__GNUC__)
-static FILE mystdout = FDEV_SETUP_STREAM(usart0_putchar, NULL, _FDEV_SETUP_WRITE);
-#endif
 
 /** Global Variable declaration **/
 
@@ -73,9 +68,9 @@ uint8_t init_vector[]
 /* Input plain text data that are to be encrypted */
 uint8_t pText[] = {"Input_Text_blck1Input_Text_blck2Input_Text_blck3Input_Text_blck4"};
 /* array to store the encrypted message */
-uint8_t cText[64];
+uint8_t cText[128];
 /* array to store the decrypted message */
-uint8_t pText1[64];
+uint8_t pText1[128];
 
 /*!
  * \brief Main application function.                              \n
@@ -88,12 +83,6 @@ uint8_t pText1[64];
  */
 int main(void)
 {
-	/* Initializes MCU, drivers and middleware */
-	atmel_start_init();
-#if defined(__GNUC__)
-	stdout = &mystdout;
-#endif
-
 	/* Generate key schedule for AES-128 from the Cipher Key */
 	aes_init(key_vectors);
 
@@ -121,6 +110,10 @@ int main(void)
 		;
 	// Perform ECB Decryption
 	ecb_decrypt(cText, pText1, sizeof(cText));
+	printf("Ctext: ");
+	for(int i = 0; i < sizeof(cText); i++){
+		printf("%x ", cText[i]);
+	}
 	// Print decrypted message
 	printf("\n Decrypted message using AES-ECB mode : \r\n");
 	printf("\n %s \r\n", pText1);
@@ -135,6 +128,10 @@ int main(void)
 		;
 	// Perform CFB Decryption
 	cfb_decrypt(cText, pText1, init_vector, CFB_MODE_128, sizeof(cText));
+	printf("Ctext: ");
+	for(int i = 0; i < sizeof(cText); i++){
+		printf("%x ", cText[i]);
+	}
 	// Print decrypted message
 	printf("\n Decrypted message using AES-CFB mode : \r\n");
 	printf("\n %s \r\n", pText1);
@@ -149,7 +146,12 @@ int main(void)
 		;
 	// Perform OFB Decryption
 	ofb_encrypt(cText, pText1, init_vector, sizeof(cText));
+	printf("Ctext: ");
+	for(int i = 0; i < sizeof(cText); i++){
+		printf("%x ", cText[i]);
+	}
 	// Print decrypted message
+	printf("\n Ctext: %s\n", cText);
 	printf("\n Decrypted message using AES-OFB mode : \r\n");
 	printf("\n %s \r\n", pText1);
 
@@ -171,6 +173,10 @@ int main(void)
 	counter_vector.counter  = AES_CTR_COUNTER;
 	// Perform CTR Decryption
 	ctr_encrypt_decrypt(cText, pText1, &counter_vector, sizeof(pText1));
+	printf("Ctext: ");
+	for(int i = 0; i < sizeof(cText); i++){
+		printf("%x ", cText[i]);
+	}
 	// Print decrypted message
 	printf("\n Decrypted message using AES-CTR mode : \r\n");
 	printf("\n %s \r\n", pText1);
@@ -190,13 +196,14 @@ int main(void)
 		;
 	// Perform CBC Decryption
 	cbc_decrypt(cText, pText1, init_vector, sizeof(cText));
+	printf("Ctext: ");
+	for(int i = 0; i < sizeof(cText); i++){
+		printf("%x ", cText[i]);
+	}
 	// Print decrypted message
 	printf("\n Decrypted message using AES-CBC mode : \r\n");
 	printf("\n %s \r\n", pText1);
 
 #endif
 
-	/* Forever loop */
-	while (1)
-		;
 }

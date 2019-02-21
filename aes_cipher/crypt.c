@@ -58,7 +58,9 @@ void ecb_encrypt(uint8_t *plainText, uint8_t *cipherText, uint32_t size)
 	uint8_t  block_count      = 0;
 
 	// Calculate the number of input blocks
-	input_block_size = size / AES_BLOCK_SIZE;
+	//input_block_size = size / AES_BLOCK_SIZE;
+	input_block_size = 1 + ((size - 1) / AES_BLOCK_SIZE);
+	printf("%d\t %d\t %d\n", input_block_size, size, AES_BLOCK_SIZE);
 
 	for (block_count = 0; block_count < input_block_size; block_count++) {
 		// Perform forward cipher for the input blocks
@@ -77,7 +79,8 @@ void ecb_decrypt(uint8_t *cipherText, uint8_t *plainText, uint32_t size)
 	uint8_t  block_count      = 0;
 
 	// Calculate the number of input blocks
-	input_block_size = size / AES_BLOCK_SIZE;
+	//input_block_size = size / AES_BLOCK_SIZE;
+	input_block_size = 1 + ((size - 1) / AES_BLOCK_SIZE);
 
 	for (block_count = 0; block_count < input_block_size; block_count++) {
 		// Perform inverse cipher for the input blocks
@@ -97,7 +100,8 @@ void cbc_encrypt(uint8_t *plainText, uint8_t *cipherText, uint8_t *init_vector, 
 	uint8_t  byte_count = 0;
 
 	// Calculate input block size
-	input_block_size = (size / AES_BLOCK_SIZE);
+	//input_block_size = (size / AES_BLOCK_SIZE);
+	input_block_size = 1 + ((size - 1) / AES_BLOCK_SIZE);
 
 	for (byte_count = 0; byte_count < AES_BLOCK_SIZE; byte_count++) {
 		// XOR plain text with initialization vector to form first input block
@@ -135,7 +139,8 @@ void cbc_decrypt(uint8_t *cipherText, uint8_t *plainText, uint8_t *init_vector, 
 	uint8_t  byte_count = 0;
 
 	// Calculate input block size
-	input_block_size = (size / AES_BLOCK_SIZE);
+	//input_block_size = (size / AES_BLOCK_SIZE);
+	input_block_size = 1 + ((size - 1) / AES_BLOCK_SIZE);
 
 	// Round0
 	aes_inverse_cipher(cipherText, plainText);
@@ -188,7 +193,8 @@ void cfb_encrypt(uint8_t *plainText, uint8_t *cipherText, uint8_t *init_vector, 
 	cfb_byte = mode / 8;
 
 	// Calculate the number of input blocks
-	input_block_size = (size / AES_BLOCK_SIZE);
+	//input_block_size = (size / AES_BLOCK_SIZE);
+	input_block_size = 1 + ((size - 1) / AES_BLOCK_SIZE);
 
 	for (byte_count = 0; byte_count < AES_BLOCK_SIZE; byte_count++) {
 		// Moving initial vector to a temp array
@@ -275,7 +281,8 @@ void cfb_decrypt(uint8_t *cipherText, uint8_t *plainText, uint8_t *init_vector, 
 	cfb_byte = mode / 8;
 
 	// Calculate the number of input blocks
-	input_block_size = (size / AES_BLOCK_SIZE);
+	//input_block_size = (size / AES_BLOCK_SIZE);
+	input_block_size = 1 + ((size - 1) / AES_BLOCK_SIZE);
 
 	for (byte_count = 0; byte_count < AES_BLOCK_SIZE; byte_count++) {
 		// Moving initial vector to a temp array
@@ -348,7 +355,8 @@ void ofb_encrypt(uint8_t *plainText, uint8_t *cipherText, uint8_t *init_vector, 
 	uint8_t  input_block[16] = {0};
 
 	// Calculate the number of blocks
-	input_block_size = (size / AES_BLOCK_SIZE);
+	//input_block_size = (size / AES_BLOCK_SIZE);
+	input_block_size = 1 + ((size - 1) / AES_BLOCK_SIZE);
 
 	for (byte_count = 0; byte_count < AES_BLOCK_SIZE; byte_count++) {
 		// Moving initial vector to a temp array
@@ -383,7 +391,8 @@ void ofb_decrypt(uint8_t *cipherText, uint8_t *plainText, uint8_t *init_vector, 
 	uint8_t  input_block[16] = {0};
 
 	// Calculate the number of input blocks
-	input_block_size = size / AES_BLOCK_SIZE;
+	//input_block_size = size / AES_BLOCK_SIZE;
+	input_block_size = 1 + ((size - 1) / AES_BLOCK_SIZE);
 
 	for (byte_count = 0; byte_count < AES_BLOCK_SIZE; byte_count++) {
 		// Moving initial vector to a temp array
@@ -449,7 +458,8 @@ void ctr_encrypt_decrypt(uint8_t *input_block, uint8_t *output_block, ctr_blk_t 
 	uint8_t  byte_count = 0;
 
 	// Calculate input block size
-	input_block_size = (size / AES_BLOCK_SIZE);
+	//input_block_size = (size / AES_BLOCK_SIZE);
+	input_block_size = 1 + ((size - 1) / AES_BLOCK_SIZE);
 
 	// Move the initial counter to local counter block
 	// Append Nonce to first 4 bytes of counter block

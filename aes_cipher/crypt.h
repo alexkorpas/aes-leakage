@@ -45,7 +45,9 @@
 #define CRYPT_H
 
 #include "aes.h"
-#include <compiler.h>
+#include <stdio.h>
+#include <stdint.h>
+//#include <compiler.h>
 
 // Counter block structure for AES-CTR mode
 typedef struct {
