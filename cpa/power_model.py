@@ -6,7 +6,9 @@ class PowerModel:
     
     def hamming_dist(self, reference, data):
         """Computes the Hamming distance for two given bit strings by counting
-        the amount of different bits between them.
+        the amount of different bits between them. The Hamming distance will
+        be proportional to the actual power consumption of going from the
+        "reference" state to the "data" state.
         
         Arguments:
             reference {string} -- A binary string representing the reference
