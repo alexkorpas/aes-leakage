@@ -4,7 +4,16 @@ from scipy.stats import pearsonr
 
 class Attacker:
 
-    def __init__(self):
+    def __init__(self, plaintexts):
+        """Initiates an Attacker object, which will execute a Correlation
+        Power Analysis Attack on an AES implementation by having it encrypt
+        a given set of plaintexts.
+        
+        Arguments:
+            plaintexts {[string]} -- The plaintext strings that will be
+            encrypted to obtain power samples from the algorithm.
+        """
+        self.plaintexts = plaintexts
         pass
 
 
@@ -17,8 +26,9 @@ class Attacker:
         # Preferably, each sample is recorded for a different plaintext.
         power_samples = []
 
-        for pow_samp in power_samples:
-            pass
+        possible_subkeys = self.get_possible_byte_combs()
+        for subkey_guess in possible_subkeys:
+            modeled_consumption = 
 
 
     # Call to get PCC that defines correlation between a subkey guess's
