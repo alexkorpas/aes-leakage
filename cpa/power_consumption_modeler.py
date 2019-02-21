@@ -1,4 +1,4 @@
-class PowerModel:
+class PowerConsumptionModeler:
     
     def __init__(self):
         pass
