@@ -32,6 +32,8 @@ class Attacker:
         # Preferably, each sample is recorded for a different plaintext.
         power_samples = []
 
+
+
         # Compute Pearson's Correlation Coefficient (PCC) for each possible
         # subkey and use the PCCs to find the best subkey.
         possible_subkeys = self.get_possible_byte_combs()
@@ -45,8 +47,8 @@ class Attacker:
 
             for i in range(len(power_samples)):
                 # TODO: obtain location of plaintext to model with
-                block_nr = -1
-                byte_nr = -1
+                block_nr = 1 # The 128-bit plaintext block we're attacking
+                byte_nr = -1 # Attacked byte depends on the subkey's location
 
                 # TODO: Find out what D represents in the CPA paper
                 D = None
