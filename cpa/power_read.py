@@ -1,8 +1,9 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+import numpy as np
 
-TEST_NOISE = "data/example_noise_sin_1.csv"
+TEST_NOISE = "data/example_noise/example_sin_1.csv"
 OUTPUT_PLOT = "data/out_plot.jpg"
 
 
@@ -27,10 +28,12 @@ class PowerReport:
 
         plt.savefig(filename)
 
+    def get_bytes(self):
+        rec = self.data.to_records(index=False)
 
 def main():
     p = PowerReport()
-    p.create_figure()
+    p.get_bytes()
 
 
 if __name__ == '__main__':
