@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
-TEST_NOISE = "data/example_noise_0_50.csv"
+TEST_NOISE = "data/example_noise_sin_1.csv"
 OUTPUT_PLOT = "data/out_plot.jpg"
 
 
