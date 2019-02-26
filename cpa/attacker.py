@@ -2,6 +2,7 @@ import itertools
 from numpy import cov, std
 from scipy.stats import pearsonr
 from power_consumption_modeler import PowerConsumptionModeler
+from helpers import *
 
 
 class Attacker:
@@ -18,12 +19,9 @@ class Attacker:
         """
         self.plaintexts = plaintexts
         self.power_modeler = PowerConsumptionModeler()
-        pass
 
     def obtain_full_private_key(self):
         # TODO: Write method docstring
-        # TODO: Remove when method is fully implemented
-        raise NotImplementedError
 
         private_key = []  # List of binary values
 
@@ -31,6 +29,19 @@ class Attacker:
         # Preferably, each sample is recorded for a different plaintext.
         power_samples = []
 
+        block_nr = 0  # It doesn't matter which plaintext block we look at
+
+        final_subkeys = []  # 16 subkeys of 8 bits each
+        for subkey_nr in range(0, 16):
+            subkey = self.find_used_subkey(power_samples, block_nr, subkey_nr)
+            final_subkeys.append(subkey)
+
+        private_key = list(itertools.chain.from_iterable(final_subkeys))
+
+        return bit_tuple_to_string(private_key)
+
+    def find_used_subkey(self, power_samples, plaintext_block_nr,
+                         subkey_byte_index):
         # Compute Pearson's Correlation Coefficient (PCC) for each possible
         # subkey and use the PCCs to find the best subkey.
         possible_subkeys = self.get_possible_byte_combs()
@@ -43,13 +54,12 @@ class Attacker:
             subkey_guess_consumptions = []
 
             for i in range(len(power_samples)):
-                # TODO: obtain location of plaintext to model with
-                block_nr = 1  # The 128-bit plaintext block we're attacking
-                byte_nr = -1  # Attacked byte depends on the subkey's location
-
+                # Define the location we're attacking in the full plaintext
+                block_nr = plaintext_block_nr
+                byte_nr = subkey_byte_index
                 subplaintext = self.get_subplaintext(i, block_nr, byte_nr)
-                # TODO: Compute the following Hamm dist after subBytes in
-                # round 1, because then state = sbox(input ^ key)
+
+                # Compute the following Hamm dist after subBytes in round 1
                 modeled_consumption = \
                     self.power_modeler.hamming_dist(subkey_guess, subplaintext)
 
@@ -64,8 +74,7 @@ class Attacker:
                 best_subkey = subkey_guess
                 best_subkey_pcc = pcc
 
-    # Call to get PCC that defines correlation between a subkey guess's
-    # predicted power consumption and the actual alg's power consumption.
+        return best_subkey
 
     def pearson_correlation_coeff(self, actual_consumptions,
                                   modeled_consumptions):
