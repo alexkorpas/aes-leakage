@@ -21,7 +21,13 @@ class Attacker:
         self.power_modeler = PowerConsumptionModeler()
 
     def obtain_full_private_key(self):
-        # TODO: Write method docstring
+        """Computes the full private key used in AES128 by computing each of
+        its 16 subkeys. This is done with power samples produced by encryption
+        of known plaintexts.
+
+        Returns:
+            string -- The full 128-bit key.
+        """
 
         private_key = []  # List of binary values
 
@@ -42,6 +48,24 @@ class Attacker:
 
     def find_used_subkey(self, power_samples, plaintext_block_nr,
                          subkey_byte_index):
+        """Finds the actual used subkey for AES128 encryption at a given point
+        in the plaintext. This point should coincide with the point at which
+        each power sample was taken. A subkey is found by modeling the power
+        consumptions for each of 2^8 subkey guesses and checking which of
+        the guesses correlates the most with the actual power consumptions.
+        
+        Arguments:
+            power_samples {[[int]]} -- The actual power consumption traces at
+            the desired point for each plaintext encryption. Given as as a
+            list of bit tuples.
+            plaintext_block_nr {int} -- Integer to indicate where in the
+            plaintext the inspected block starts.
+            subkey_byte_index {int} -- Integer to indicate which byte we're
+            inspecting in the given block.
+        
+        Returns:
+            [int] -- The best subkey guess as a tuple of 8 integers.
+        """
         # Compute Pearson's Correlation Coefficient (PCC) for each possible
         # subkey and use the PCCs to find the best subkey.
         possible_subkeys = self.get_possible_byte_combs()
