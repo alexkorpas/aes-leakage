@@ -32,8 +32,6 @@ class Attacker:
         # Preferably, each sample is recorded for a different plaintext.
         power_samples = []
 
-
-
         # Compute Pearson's Correlation Coefficient (PCC) for each possible
         # subkey and use the PCCs to find the best subkey.
         possible_subkeys = self.get_possible_byte_combs()
@@ -50,12 +48,10 @@ class Attacker:
                 block_nr = 1 # The 128-bit plaintext block we're attacking
                 byte_nr = -1 # Attacked byte depends on the subkey's location
 
-                # TODO: Find out what D represents in the CPA paper
-                D = None
-
                 subplaintext = self.get_subplaintext(i, block_nr, byte_nr)
+                # TODO: Compute the following Hamm dist after subBytes in rnd 1
                 modeled_consumption = \
-                    self.power_modeler.hamming_dist(subkey_guess, D)
+                    self.power_modeler.hamming_dist(subkey_guess, subplaintext)
                 
                 subkey_guess.append(subkey_guess_consumptions)
             
@@ -68,7 +64,7 @@ class Attacker:
 
     # Call to get PCC that defines correlation between a subkey guess's
     # predicted power consumption and the actual alg's power consumption.
-    def pearson_correlation_coeff(self, actual_consumptions, 
+    def pearson_correlation_coeff(self, actual_consumptions,
                                   modeled_consumptions):
         """Computes the Pearson Correlation Coefficient (PCC) between a set of
         obtained power consumptions and the modeled power consumptions for a
