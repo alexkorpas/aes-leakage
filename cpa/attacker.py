@@ -87,7 +87,7 @@ class Attacker:
                 modeled_consumption = \
                     self.power_modeler.hamming_dist(subkey_guess, subplaintext)
 
-                subkey_guess.append(subkey_guess_consumptions)
+                subkey_guess_consumptions.append(modeled_consumption)
 
             pcc = self.pearson_correlation_coeff(power_samples,
                                                  subkey_guess_consumptions)
