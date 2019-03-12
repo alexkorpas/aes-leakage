@@ -1,5 +1,7 @@
 import unittest  # Run tests from this folder's parent directory
 
+import numpy as np
+
 from attacker import Attacker
 
 

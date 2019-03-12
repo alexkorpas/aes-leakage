@@ -1,15 +1,14 @@
 class PowerConsumptionModeler:
-    
+
     def __init__(self):
         pass
 
-    
     def hamming_dist(self, reference, data):
         """Computes the Hamming distance for two given bit strings by counting
         the amount of different bits between them. The Hamming distance will
         be proportional to the actual power consumption of going from the
         "reference" state to the "data" state.
-        
+
         Arguments:
             reference {string} -- A binary string representing the reference
             power consumption state.
@@ -30,11 +29,10 @@ class PowerConsumptionModeler:
                 dist += 1
         return dist
 
-    
     def compute_consumed_power(self, ham_dist, a, b):
         """Computes the consumed power W, which is proportional to scalar a
         and base consumption b.
-        
+
         Arguments:
             ham_dist {int} -- The Hamming distance computed between two bit
             strings.
@@ -48,4 +46,3 @@ class PowerConsumptionModeler:
             bit strings of which the Hamming distance is given.
         """
         return a*ham_dist + b
-

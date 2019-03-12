@@ -15,7 +15,8 @@ class Attacker:
         Arguments:
             plaintexts {[[int]]} -- The plaintext binary sequences that will
             be encrypted to obtain power samples from the algorithm. Each
-            sequence is a tuple (or list) of bits.
+            sequence is a tuple (or list) of decimal numbers that represent
+            bytes.
         """
         self.plaintexts = plaintexts
         self.power_modeler = PowerConsumptionModeler()
@@ -31,7 +32,8 @@ class Attacker:
 
         private_key = []  # List of binary values
 
-        # Record n power consumption samples from a certain point in the alg.
+        # Record n power consumption samples from the entire algorithm.
+        # Each power consumption is a list 
         # Preferably, each sample is recorded for a different plaintext.
         power_samples = []
 
