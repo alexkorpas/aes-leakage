@@ -24,5 +24,9 @@ def bit_tuple_to_string(bits):
     return "".join([str(bit) for bit in bits])
 
 
-def plaintext_bytes_to_bits(pt_bytes):
-    pass
+def bytes_to_bits(byte_decimals):
+    bits = []
+    for dec in byte_decimals:
+        bit_str = bin(dec)[2:].zfill(8)
+        for bit in bit_str:
+            bits.append(bit)

@@ -18,7 +18,11 @@ class Attacker:
             sequence is a tuple (or list) of decimal numbers that represent
             bytes.
         """
-        self.plaintexts = plaintexts
+        self.plaintexts = []
+        # Convert each plaintext to a list of bits
+        for plaintext in plaintexts:
+            self.plaintexts.append(bytes_to_bits(plaintext))
+
         self.power_modeler = PowerConsumptionModeler()
 
     def obtain_full_private_key(self):
