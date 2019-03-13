@@ -69,7 +69,7 @@ class Attacker:
             plaintext the inspected block starts.
             subkey_byte_index {int} -- Integer to indicate which byte we're
             inspecting in the given block.
-        
+
         Returns:
             [int] -- The best subkey guess as a tuple of 8 bits.
         """
@@ -84,7 +84,8 @@ class Attacker:
             # encrypting it with one of the guessed subkeys.
             subkey_guess_consumptions = []
 
-            for i in range(len(power_samples)):
+            # Compute the simulated subkey consumptions for each plaintext
+            for i in range(self.plaintexts):
                 # Define the location we're attacking in the full plaintext
                 block_nr = plaintext_block_nr
                 byte_nr = subkey_byte_index
@@ -98,11 +99,24 @@ class Attacker:
 
                 subkey_guess_consumptions.append(modeled_consumption)
 
-            pcc = self.pearson_correlation_coeff(power_samples,
-                                                 subkey_guess_consumptions)
+            # Now that we have the subkey's power consumption estimates, we can
+            # find the most correlated trace point for this subkey.
+            best_point = None
+            best_point_pcc = 0
 
-            # Set this guess ass the best subkey if it correlates better on
-            # average over all power traces.
+            point_amnt = len(power_samples[0])  # Assume equal point amounts
+            for point in point_amnt:
+                volts_at_this_point = [samp[point] for samp in power_samples]
+                point_pcc = self.pearson_correlation_coeff(
+                    volts_at_this_point, subkey_guess_consumptions)
+
+                if (abs(point_pcc) > abs(best_point_pcc)):
+                    best_point = point
+                    best_point_pcc = point_pcc
+
+            # The best point PCC represents this subkey's best PCC.
+            pcc = best_point_pcc
+            # Use it to keep track of the best subkey PCC.
             if (abs(pcc) > abs(best_subkey_pcc)):
                 best_subkey = subkey_guess
                 best_subkey_pcc = pcc
