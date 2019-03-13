@@ -17,11 +17,14 @@ SBOX = (
     0x8c,0xa1,0x89,0x0d,0xbf,0xe6,0x42,0x68,0x41,0x99,0x2d,0x0f,0xb0,0x54,0xbb,0x16
 )
 
+
 def apply_sbox(byte):
     return SBOX[byte]
 
+
 def xor_bit_tuples(tup1, tup2):
     return [tup1[i] ^ tup2[i] for i in range(len(tup1))]
+
 
 def bit_tuples_to_string(bit_tuples):
     """Converts a given list of bit tuples to a single string of those bits.
