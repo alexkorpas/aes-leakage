@@ -13,7 +13,7 @@ class Attacker:
         a given set of plaintexts.
 
         Arguments:
-            plaintexts {[[int]]} -- The plaintext binary sequences that will
+            plaintexts { [[int]] } -- The plaintext binary sequences that will
             be encrypted to obtain power samples from the algorithm. Each
             sequence is a tuple (or list) of decimal numbers that represent
             bytes.
@@ -25,21 +25,22 @@ class Attacker:
 
         self.power_modeler = PowerConsumptionModeler()
 
-    def obtain_full_private_key(self):
+    def obtain_full_private_key(self, power_samples):
         """Computes the full private key used in AES128 by computing each of
         its 16 subkeys. This is done with power samples produced by encryption
         of known plaintexts.
+
+        Arguments:
+            power_samples { [[float]] } - A list of power traces where each
+            trace is a list of floats that represents the obtained output
+            for one plaintext encryption. Each sample is assumed to use the
+            same encryption key.
 
         Returns:
             string -- The full 128-bit key.
         """
 
         private_key = []  # List of binary values
-
-        # Record n power consumption samples from the entire algorithm.
-        # Each power consumption is a list 
-        # Preferably, each sample is recorded for a different plaintext.
-        power_samples = []
 
         block_nr = 0  # It doesn't matter which plaintext block we look at
 
@@ -61,16 +62,16 @@ class Attacker:
         the guesses correlates the most with the actual power consumptions.
         
         Arguments:
-            power_samples {[[int]]} -- The actual power consumption traces at
-            the desired point for each plaintext encryption. Given as as a
-            list of bit tuples.
+            power_samples { [[float]] } -- The actual power consumption traces
+            at the desired point for each plaintext encryption. Given as a list
+            of samples where each sample is a list of floats.
             plaintext_block_nr {int} -- Integer to indicate where in the
             plaintext the inspected block starts.
             subkey_byte_index {int} -- Integer to indicate which byte we're
             inspecting in the given block.
         
         Returns:
-            [int] -- The best subkey guess as a tuple of 8 integers.
+            [int] -- The best subkey guess as a tuple of 8 bits.
         """
         # Compute Pearson's Correlation Coefficient (PCC) for each possible
         # subkey and use the PCCs to find the best subkey.
@@ -89,9 +90,11 @@ class Attacker:
                 byte_nr = subkey_byte_index
                 subplaintext = self.get_subplaintext(i, block_nr, byte_nr)
 
-                # Compute the following Hamm dist after subBytes in round 1
+                # Compute the Hamm dist after subBytes in round 1
+                sbox_simulation = \
+                    apply_sbox(xor_bit_tuples(subplaintext, subkey_guess))
                 modeled_consumption = \
-                    self.power_modeler.hamming_dist(subkey_guess, subplaintext)
+                    self.power_modeler.hamming_weight(sbox_simulation)
 
                 subkey_guess_consumptions.append(modeled_consumption)
 
@@ -140,6 +143,17 @@ class Attacker:
             is a tuple that consists of 8 integers.
         """
         return list(itertools.product([0, 1], repeat=8))
+
+    def extract_subbytes_trace_points(self, power_trace):
+        """Given a list of points from an AES128 power trace, this method
+        locates and extracts the points that correspond to the subBytes step
+        in the first round of the algorithm.
+
+        Returns:
+            [float] -- A subset of the given points' values that correspond to
+            the consumption values during the subBytes step in the first round.
+        """
+        return []
 
     def get_subplaintext(self, plaintext_index, block_nr, subbyte_nr):
         # AES uses blocks of 128 bits. Set the index at the start of the block.
