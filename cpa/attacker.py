@@ -46,7 +46,9 @@ class Attacker:
 
         final_subkeys = []  # 16 subkeys of 8 bits each
         for subkey_nr in range(0, 16):
+            print(f"Starting to obtain subkey {subkey_nr}!")
             subkey = self.find_used_subkey(power_samples, block_nr, subkey_nr)
+            print(f"Found subkey nr {subkey_nr}: {subkey}")
             final_subkeys.append(subkey)
 
         private_key = list(itertools.chain.from_iterable(final_subkeys))
@@ -80,12 +82,13 @@ class Attacker:
         best_subkey_pcc = 0
 
         for subkey_guess in possible_subkeys:
+            print(f"Trying subkey {bit_tup_to_int(subkey_guess)}...")
             # For each plaintext, compute the modeled consumption for
             # encrypting it with one of the guessed subkeys.
             subkey_guess_consumptions = []
 
             # Compute the simulated subkey consumptions for each plaintext
-            for i in range(self.plaintexts):
+            for i in range(len(self.plaintexts)):
                 # Define the location we're attacking in the full plaintext
                 block_nr = plaintext_block_nr
                 byte_nr = subkey_byte_index
@@ -105,7 +108,7 @@ class Attacker:
             best_point_pcc = 0
 
             point_amnt = len(power_samples[0])  # Assume equal point amounts
-            for point in point_amnt:
+            for point in range(point_amnt):
                 volts_at_this_point = [samp[point] for samp in power_samples]
                 point_pcc = self.pearson_correlation_coeff(
                     volts_at_this_point, subkey_guess_consumptions)
