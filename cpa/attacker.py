@@ -160,6 +160,7 @@ class Attacker:
         bit_index = block_nr*128
         bit_index += subbyte_nr*8  # Set the index at the byte under test
 
-        plaintext_bits = self.plaintexts[plaintext_index]
+        plaintext_bits =  \
+            [int(char) for char in self.plaintexts[plaintext_index]]
         # Return the byte at this location
         return plaintext_bits[bit_index:bit_index + 8]

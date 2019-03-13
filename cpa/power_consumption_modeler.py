@@ -30,17 +30,17 @@ class PowerConsumptionModeler:
         return dist
 
     def hamming_weight(self, data):
-        """Computes the Hamming weight of a given bit string. The HW is the
+        """Computes the Hamming weight of a given integer. The HW is the
         amount of bits set to 1.
-        
+
         Arguments:
-            data {string} -- The binary string of which the Hamming weight
-            will be computed.
-        
+            data {int} -- The integer of which the Hamming weight will be
+            computed.
+
         Returns:
             int -- The Hamming weight of the given binary string.
         """
-        return self.hamming_dist("0"*len(data))
+        return bin(data).count("1")
 
     def compute_consumed_power(self, ham_dist, a, b):
         """Computes the consumed power W, which is proportional to scalar a

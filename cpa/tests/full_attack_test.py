@@ -12,7 +12,7 @@ class FullAttackTest(unittest.TestCase):
     def test_obtain_full_private_key(self):
         # Import power traces for which we know the used key.
         key = np.load(self.TEST_DATA_LOC + "key.npy")
-        power_samples = np.load(self.TEST_DATA_LOC + "traces.npy")
+        power_samples = np.load(self.TEST_DATA_LOC + "traces.npy")[:-1]
         plaintexts = np.load(self.TEST_DATA_LOC + "plain.npy")
 
         # Set up the attacker. Plaintext format conversion is handled there.

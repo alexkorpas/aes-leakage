@@ -18,12 +18,18 @@ SBOX = (
 )
 
 
-def apply_sbox(byte):
-    return SBOX[byte]
+def apply_sbox(bit_tup):
+    index = bit_tup_to_int(bit_tup)
+    return SBOX[index]
 
 
 def xor_bit_tuples(tup1, tup2):
     return [tup1[i] ^ tup2[i] for i in range(len(tup1))]
+
+
+def bit_tup_to_int(tup):
+    bit_str = [str(bit) for bit in tup]
+    return int("".join(bit_str), 2)
 
 
 def bit_tuples_to_string(bit_tuples):
@@ -58,3 +64,5 @@ def bytes_to_bits(byte_decimals):
         bit_str = bin(dec)[2:].zfill(8)
         for bit in bit_str:
             bits.append(bit)
+    return bits
+
