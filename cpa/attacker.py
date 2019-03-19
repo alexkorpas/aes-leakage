@@ -59,7 +59,7 @@ class Attacker:
         each power sample was taken. A subkey is found by modeling the power
         consumptions for each of 2^8 subkey guesses and checking which of
         the guesses correlates the most with the actual power consumptions.
-        
+
         Arguments:
             power_samples { [[float]] } -- The actual power consumption traces
             at the desired point for each plaintext encryption. Given as a list
@@ -104,6 +104,7 @@ class Attacker:
             print("Finding out which subkey correlated the most...")
             point_amnt = len(power_samples[0])  # Assume equal point amounts
             for point in range(point_amnt):
+                print(f"Checking correlation for point {point}")
                 volts_at_this_point = [samp[point] for samp in power_samples]
                 point_pcc = self.pearson_correlation_coeff(
                     volts_at_this_point, subkey_guess_consumptions)
@@ -118,6 +119,7 @@ class Attacker:
             if (abs(pcc) > abs(best_subkey_pcc)):
                 best_subkey = subkey_guess
                 best_subkey_pcc = pcc
+            print("bruh")
 
         return best_subkey
 
