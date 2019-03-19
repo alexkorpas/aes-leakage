@@ -22,7 +22,7 @@ class FullAttackTest(unittest.TestCase):
         # Convert the known skey so it can be compared to our output.
         known_key_bits = bytes_to_bits(key)
 
-        self.assertEqual(known_key_bits, known_key_bits)
+        self.assertEqual(known_key_bits, computed_key_bits)
 
 
 if __name__ == '__main__':

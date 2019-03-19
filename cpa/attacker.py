@@ -6,6 +6,7 @@ from helpers import *
 
 
 class Attacker:
+    POSSIBLE_SUBKEYS = range(256)  # Integers [0..255]
 
     def __init__(self, plaintexts):
         """Initiates an Attacker object, which will execute a Correlation
@@ -18,10 +19,7 @@ class Attacker:
             sequence is a tuple (or list) of decimal numbers that represent
             bytes.
         """
-        self.plaintexts = []
-        # Convert each plaintext to a list of bits
-        for plaintext in plaintexts:
-            self.plaintexts.append(bytes_to_bits(plaintext))
+        self.plaintexts = plaintexts
 
         self.power_modeler = PowerConsumptionModeler()
 
@@ -39,12 +37,11 @@ class Attacker:
         Returns:
             string -- The full 128-bit key.
         """
-
         private_key = []  # List of binary values
 
         block_nr = 0  # It doesn't matter which plaintext block we look at
 
-        final_subkeys = []  # 16 subkeys of 8 bits each
+        final_subkeys = []  # 16 subkeys of 8 bits each, as integers
         for subkey_nr in range(0, 16):
             print(f"Starting to obtain subkey {subkey_nr}!")
             subkey = self.find_used_subkey(power_samples, block_nr, subkey_nr)
@@ -73,32 +70,29 @@ class Attacker:
             inspecting in the given block.
 
         Returns:
-            [int] -- The best subkey guess as a tuple of 8 bits.
+            int -- The best subkey guess as an integer.
         """
         # Compute Pearson's Correlation Coefficient (PCC) for each possible
         # subkey and use the PCCs to find the best subkey.
-        possible_subkeys = self.get_possible_byte_combs()
-        best_subkey = (0, 0, 0, 0, 0, 0, 0, 0)
+        best_subkey = 0
         best_subkey_pcc = 0
 
-        for subkey_guess in possible_subkeys:
-            print(f"Trying subkey {bit_tup_to_int(subkey_guess)}...")
+        for subkey_guess in self.POSSIBLE_SUBKEYS:
+            print(f"Trying subkey {subkey_guess}...")
             # For each plaintext, compute the modeled consumption for
             # encrypting it with one of the guessed subkeys.
             subkey_guess_consumptions = []
 
+            print("Computing modeled consumptions...")
             # Compute the simulated subkey consumptions for each plaintext
             for i in range(len(self.plaintexts)):
                 # Define the location we're attacking in the full plaintext
-                block_nr = plaintext_block_nr
-                byte_nr = subkey_byte_index
-                subplaintext = self.get_subplaintext(i, block_nr, byte_nr)
+                subplaintext = self.plaintexts[i][subkey_byte_index]
 
                 # Compute the Hamm dist after subBytes in round 1
-                sbox_simulation = \
-                    apply_sbox(xor_bit_tuples(subplaintext, subkey_guess))
+                sbox_simulation = apply_sbox(subplaintext ^ subkey_guess)
                 modeled_consumption = \
-                    self.power_modeler.hamming_weight(sbox_simulation)
+                    self.power_modeler.subkey_hamm_weight(sbox_simulation)
 
                 subkey_guess_consumptions.append(modeled_consumption)
 
@@ -107,6 +101,7 @@ class Attacker:
             best_point = None
             best_point_pcc = 0
 
+            print("Finding out which subkey correlated the most...")
             point_amnt = len(power_samples[0])  # Assume equal point amounts
             for point in range(point_amnt):
                 volts_at_this_point = [samp[point] for samp in power_samples]
@@ -150,16 +145,6 @@ class Attacker:
         # PCC = cov(AC, MC)/stddev(AC)*stddev(MC)
         (pcc, _) = pearsonr(actual_consumptions, modeled_consumptions)
         return pcc
-
-    def get_possible_byte_combs(self):
-        """Computes a list of all possible combinations of a bit sequence of
-        length 8 by using the itertools module's built-in method for this.
-
-        Returns:
-            [[int]] -- A list of all byte combinations, where each combination
-            is a tuple that consists of 8 integers.
-        """
-        return list(itertools.product([0, 1], repeat=8))
 
     def extract_subbytes_trace_points(self, power_trace):
         """Given a list of points from an AES128 power trace, this method

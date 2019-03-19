@@ -1,3 +1,6 @@
+import itertools
+
+
 SBOX = (
     0x63,0x7c,0x77,0x7b,0xf2,0x6b,0x6f,0xc5,0x30,0x01,0x67,0x2b,0xfe,0xd7,0xab,0x76,
     0xca,0x82,0xc9,0x7d,0xfa,0x59,0x47,0xf0,0xad,0xd4,0xa2,0xaf,0x9c,0xa4,0x72,0xc0,
@@ -18,9 +21,8 @@ SBOX = (
 )
 
 
-def apply_sbox(bit_tup):
-    index = bit_tup_to_int(bit_tup)
-    return SBOX[index]
+def apply_sbox(num):
+    return SBOX[num]
 
 
 def xor_bit_tuples(tup1, tup2):
@@ -56,6 +58,17 @@ def bit_tuple_to_string(bits):
         string -- The string representation of the given bits.
     """
     return "".join([str(bit) for bit in bits])
+
+
+def get_possible_byte_combs():
+    """Computes a list of all possible combinations of a bit sequence of
+    length 8 by using the itertools module's built-in method for this.
+
+    Returns:
+        [[int]] -- A list of all byte combinations, where each combination
+        is a tuple that consists of 8 integers.
+    """
+    return list(itertools.product([0, 1], repeat=8))
 
 
 def bytes_to_bits(byte_decimals):

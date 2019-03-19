@@ -1,4 +1,5 @@
 class PowerConsumptionModeler:
+    SUBKEY_HAMM_WEIGHTS = [bin(i).count("1") for i in range(0, 256)]
 
     def __init__(self):
         pass
@@ -41,6 +42,19 @@ class PowerConsumptionModeler:
             int -- The Hamming weight of the given binary string.
         """
         return bin(data).count("1")
+
+    def subkey_hamm_weight(self, subkey):
+        """Returns the Hamming weight of a given integer in the range [0..255]
+        by performing a lookup in a preprocessed Hamming weight table.
+
+        Arguments:
+            subkey {int}} -- The subkey of which we would like to get
+            the Hamming weight.
+
+        Returns:
+            int -- The Hamming weight of the given subkey.
+        """
+        return self.SUBKEY_HAMM_WEIGHTS[subkey]
 
     def compute_consumed_power(self, ham_dist, a, b):
         """Computes the consumed power W, which is proportional to scalar a
