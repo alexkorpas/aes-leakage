@@ -85,6 +85,7 @@ class Attacker:
         # that subkey's traces.
         templates = {}
 
+        # TODO: Only create templates for the points of interest
         poi_amnt = len(power_samples[0x00])
 
         for subkey in POSSIBLE_SUBKEYS:
