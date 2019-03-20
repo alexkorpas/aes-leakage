@@ -178,14 +178,14 @@ uint8_t init_vector[]
     = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
 
 #endif
-
+#define INPUT_SIZE 16
 /* Input plain text data that are to be encrypted */
 //uint8_t pText[] = {"Input_Text_blck1Input_Text_blck2Input_Text_blck3Input_Text_blck4"};
 /* array to store the encrypted message */
 //uint8_t cText[128];
 
 /* array to store the decrypted message */
-uint8_t pText1[128];
+uint8_t pText1[INPUT_SIZE] = {0};
 
 /*!
  * \brief Main application function.                              \n
@@ -206,21 +206,27 @@ void encrypt(uint8_t *pText, uint8_t *cText)
 
 	/* Print Input message for user */
 	Serial.println("The message to be encrypted is:");
-	Serial.println((char*)pText);
+  for(int i=0; i<16; i++){
+    Serial.print((char)pText[i]);
+  }
+  Serial.print("\n");
+	//Serial.println((char*)pText);
 
 	// Perform ECB Encryption
-	ecb_encrypt(pText, cText, 64);
+	ecb_encrypt(pText, cText, INPUT_SIZE);
 	for (volatile int i = 0; i < 1000; i++)
 		;
 	// Perform ECB Decryption
-	ecb_decrypt(cText, pText1, 64);
-	printf("Ctext: ");
-	for(int i = 0; i < sizeof(cText); i++){
-		printf("%x ", cText[i]);
-	}
+	ecb_decrypt(cText, pText1, INPUT_SIZE);
+	Serial.print("Ctext: ");
+  //char buf[1];
+	//for(int i = 0; i < INPUT_SIZE; i++){
+		///sprintf(buf, "%x ", cText[i]);
+    //Serial.println(buf);
+	//}
 	// Print decrypted message
 	Serial.println("Decrypted message using AES-ECB mode :");
-	for(int i = 0; i<64; i++){
+	for(int i = 0; i<INPUT_SIZE; i++){
 		Serial.print((char)pText1[i]);
 	}
 	Serial.print("\n\n");
@@ -827,8 +833,9 @@ aes_ret_status_t aes_inverse_cipher(uint8_t *cipherText, uint8_t *state)
 
 #define PIN13 13
 
-uint8_t pText[] = {"Input_Text_blck1Input_Text_blck2Input_Text_blck3Input_Text_blck4"};
-uint8_t cText[128];
+//uint8_t pText[] = {"Input_Text_blck1Input_Text_blck2Input_Text_blck3Input_Text_blck4"};
+uint8_t pText[] = {"asdfghjklzxcvbnm"};
+uint8_t cText[128] = {0};
 
 char receivedChar;
 boolean newData = false;
@@ -841,16 +848,34 @@ String nextData = "";
 
 void setup() {
    Serial.begin(9600);
+   //pinMode(A0, INPUT);
+   //analogReference(INTERNAL);
    Serial.println("<Arduino is ready>");
 }
 
+double voltageOnA0;
+char random_number;
+String random_string;
+//char *rand_string = "asdfghjklzxcvbnm";
 void loop() {
-  delay(3000);
+  //encrypt(pText, cText);
+
+  //random_string = "";
+  //for(int i = 0; i < 16; i++){
+  //  random_number = random(97, 122);
+  //  random_string = random_string + random_number;
+  //}
+  for(int i = 0; i<INPUT_SIZE; i++){
+    random_number = random(97, 122);
+    pText[i] = random_number;
+  }
+  delay(1500);
   encrypt(pText, cText);
   String cipherText = (char*)cText;
   Serial.println(cipherText.length());
   Serial.println(cipherText);
   Serial.println("\n");
+
 }
 
 void recvOneChar() {
