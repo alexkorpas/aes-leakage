@@ -35,7 +35,7 @@ class Attacker:
             same encryption key.
 
         Returns:
-            string -- The full 128-bit key.
+            [int] -- The full 128-bit key as a list of 16 integers.
         """
         private_key = []  # List of binary values
 
@@ -48,9 +48,7 @@ class Attacker:
             print(f"Found subkey nr {subkey_nr}: {subkey}")
             final_subkeys.append(subkey)
 
-        private_key = list(itertools.chain.from_iterable(final_subkeys))
-
-        return bit_tuple_to_string(private_key)
+        return final_subkeys
 
     def find_used_subkey(self, power_samples, plaintext_block_nr,
                          subkey_byte_index):
@@ -78,7 +76,7 @@ class Attacker:
         best_subkey_pcc = 0
 
         for subkey_guess in self.POSSIBLE_SUBKEYS:
-            print(f"Trying subkey {subkey_guess}...")
+            print(f"Trying subkey {subkey_guess} for PT byte {subkey_byte_index}...")
             # For each plaintext, compute the modeled consumption for
             # encrypting it with one of the guessed subkeys.
             subkey_guess_consumptions = []
@@ -104,7 +102,6 @@ class Attacker:
             print("Finding out which subkey correlated the most...")
             point_amnt = len(power_samples[0])  # Assume equal point amounts
             for point in range(point_amnt):
-                print(f"Checking correlation for point {point}")
                 volts_at_this_point = [samp[point] for samp in power_samples]
                 point_pcc = self.pearson_correlation_coeff(
                     volts_at_this_point, subkey_guess_consumptions)
@@ -119,7 +116,6 @@ class Attacker:
             if (abs(pcc) > abs(best_subkey_pcc)):
                 best_subkey = subkey_guess
                 best_subkey_pcc = pcc
-            print("bruh")
 
         return best_subkey
 
