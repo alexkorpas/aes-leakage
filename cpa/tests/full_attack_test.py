@@ -15,12 +15,12 @@ class FullAttackTest(unittest.TestCase):
         power_samples = np.load(self.TEST_DATA_LOC + "traces.npy")[:-1]
         plaintexts = np.load(self.TEST_DATA_LOC + "plain.npy")
 
-        # Set up the attacker. Plaintext format conversion is handled there.
+        # Set up the attacker and find the private key as a list of bytes.
         attacker = Attacker(plaintexts)
-        computed_key_bits = attacker.obtain_full_private_key(power_samples)
+        computed_key_bytes = attacker.obtain_full_private_key(power_samples)
 
-        # Convert the known skey so it can be compared to our output.
-        known_key_bits = bytes_to_bits(key)
+        # "key.npy" is stored as an array of identical keys, so get key[0]
+        known_key_bytes = key[0]
 
         self.assertEqual(known_key_bits, computed_key_bits)
 
