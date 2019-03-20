@@ -23,6 +23,12 @@ class Attacker:
 
         self.power_modeler = PowerConsumptionModeler()
 
+        # For each of the 16 subkeys, store a "subkey guess correlation" dict.
+        # Such a dict stores the correlation coefficient for each subkey guess.
+        self.subkey_correlation_coeffs = {}
+        for in range(16):
+            self.subkey_correlation_coeffs = {}
+
     def obtain_full_private_key(self, power_samples):
         """Computes the full private key used in AES128 by computing each of
         its 16 subkeys. This is done with power samples produced by encryption
@@ -112,6 +118,9 @@ class Attacker:
 
             # The best point PCC represents this subkey's best PCC.
             pcc = best_point_pcc
+            # Store the coefficient for guessing entropy analysis
+            self.subkey_correlation_coeffs[subkey_guess] = abs(pcc)
+
             # Use it to keep track of the best subkey PCC.
             if (abs(pcc) > abs(best_subkey_pcc)):
                 best_subkey = subkey_guess
