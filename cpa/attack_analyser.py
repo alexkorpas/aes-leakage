@@ -8,14 +8,14 @@ class AttackAnalyser:
     def compute_guessing_entropy(self, known_key, subkey_corr_coeffs):
         """Computes the guessing entropy for a fully computed key of 16 bytes
         by computing the average of each subkey's guessing entropy.
-        
+
         Arguments:
             known_key {[int]} -- The full, actual secret key as a list of ints.
             subkey_corr_coeffs { {{}} } -- A dictionary that contains a nested
             dictionary for each of the 16 subkeys. Each of these nested dicts
             contains the computed absolute correlation coefficient for each
             subkey guess that was computed in the attack on the subkey.
-        
+
         Returns:
             float -- The average guessing entropy of all subkeys.
         """
@@ -36,13 +36,13 @@ class AttackAnalyser:
         """Computes the guessing entropy for one subkey (known as the partial
         guessing entropy) by sorting the computed subkey guess correlations and
         finding the index at which the correct subkey is found.
-        
+
         Arguments:
             known_subkey {int} -- The known subkey as an integer 0 <= i <= 255.
             subkey_guess_corr_coeffs { {} } -- A dictionary that contains the
             absolute computed Pearson correlation coefficient for each subkey
             guess that was made in the attack.
-        
+
         Returns:
             int -- The guessing entropy for the given subkey to which the
             given correlation coefficients belong.
@@ -63,17 +63,17 @@ class AttackAnalyser:
 
     def get_int_key_index_from_kv_pairs(self, int_key, pairs):
         """Find the index of the tuple element that contains the given int key.
-        
+
         Arguments:
             int_key {int} -- The integer of which we want to find the tuple
             containing it.
             pairs {[()]} -- A list of tuples of which the first element is an
             integer.
-        
+
         Raises:
             ValueError -- This error is raised when the given int key is not
             present in the given pair array.
-        
+
         Returns:
             int -- The index at which the given int key's tuple is present.
         """
