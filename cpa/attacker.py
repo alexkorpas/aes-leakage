@@ -27,9 +27,9 @@ class Attacker:
 
         # For each of the 16 subkeys, store a "subkey guess correlation" dict.
         # Such a dict stores the correlation coefficient for each subkey guess.
-        self.subkey_correlation_coeffs = {}
-        for _ in range(16):
-            self.subkey_correlation_coeffs = {}
+        self.subkey_corr_coeffs = {}
+        for i in range(16):
+            self.subkey_corr_coeffs[i] = {}
 
     def obtain_full_private_key(self, power_samples):
         """Computes the full private key used in AES128 by computing each of
@@ -85,6 +85,7 @@ class Attacker:
 
         for subkey_guess in self.POSSIBLE_SUBKEYS:
             # print(f"Trying subkey {subkey_guess} for PT byte {subkey_byte_index}...")
+
             # For each plaintext, compute the modeled consumption for
             # encrypting it with one of the guessed subkeys.
             subkey_guess_consumptions = []
@@ -114,51 +115,29 @@ class Attacker:
 
             numtraces = len(power_samples)
 
-            # Mean of hypothesis
-            modeled_cons_mean = np.mean(subkey_guess_consumptions, dtype=np.float64)
-
-            # Mean of all points in trace
+            modeled_cons_mean = np.mean(subkey_guess_consumptions,
+                                        dtype=np.float64)
             traces_mean = np.mean(power_samples, axis=0, dtype=np.float64)
 
             # Compute the correlation for all trace points at the same time.
             # Build up the correlation value over time by iterating over all
             # power traces.
             for trace_num in range(0, numtraces):
-                hdiff = subkey_guess_consumptions[trace_num] - modeled_cons_mean
-                tdiff = power_samples[trace_num] - traces_mean
+                modeled_cons_diff = \
+                    subkey_guess_consumptions[trace_num] - modeled_cons_mean
+                actual_cons_diff = power_samples[trace_num] - traces_mean
 
-                sumnum = sumnum + hdiff*tdiff
-                sumden1 = sumden1 + hdiff*hdiff
-                sumden2 = sumden2 + tdiff*tdiff
+                sumnum = sumnum + modeled_cons_diff*actual_cons_diff
+                sumden1 = sumden1 + modeled_cons_diff*modeled_cons_diff
+                sumden2 = sumden2 + actual_cons_diff*actual_cons_diff
 
-            # TODO: Store ranking of PCC values for guessing entropy
             pcc = max(abs(sumnum / np.sqrt(sumden1 * sumden2)))
 
-            # # Now that we have the subkey's power consumption estimates, we can
-            # # find the most correlated trace point for this subkey.
-            # best_point = None
-            # best_point_pcc = 0
+            # For this subkey attempt, store the correlation of this subkey
+            # guess with the actual consumptions to compute guessing entropy.
+            self.subkey_corr_coeffs[subkey_byte_index][subkey_guess] = pcc
 
-            # print("Finding out at which point the subkey correlated the most...")
-            # point_amnt = len(power_samples[0])  # Assume equal point amounts
-            # correlation_start = time.time()
-            # for point in range(point_amnt):
-            #     volts_at_this_point = [samp[point] for samp in power_samples]
-            #     point_pcc = self.pearson_correlation_coeff(
-            #         volts_at_this_point, subkey_guess_consumptions)
-
-            #     if (abs(point_pcc) > abs(best_point_pcc)):
-            #         best_point = point
-            #         best_point_pcc = point_pcc
-            # correlation_end = time.time()
-            # print(f"Found best correlating point for this subkey in {correlation_end - correlation_start} seconds")
-
-            # # The best point PCC represents this subkey's best PCC.
-            # pcc = best_point_pcc
-            # # Store the coefficient for guessing entropy analysis
-            # self.subkey_correlation_coeffs[subkey_guess] = abs(pcc)
-
-            # Use it to keep track of the best subkey PCC.
+            # Compare this subkey's correlation coeff with that of the others.
             if (abs(pcc) > abs(best_subkey_pcc)):
                 best_subkey = subkey_guess
                 best_subkey_pcc = pcc
