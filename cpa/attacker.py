@@ -84,12 +84,11 @@ class Attacker:
         best_subkey_pcc = 0
 
         for subkey_guess in self.POSSIBLE_SUBKEYS:
-            print(f"Trying subkey {subkey_guess} for PT byte {subkey_byte_index}...")
+            # print(f"Trying subkey {subkey_guess} for PT byte {subkey_byte_index}...")
             # For each plaintext, compute the modeled consumption for
             # encrypting it with one of the guessed subkeys.
             subkey_guess_consumptions = []
 
-            print("Computing modeled consumptions...")
             # Compute the simulated subkey consumptions for each plaintext
             for i in range(len(self.plaintexts)):
                 # Define the location we're attacking in the full plaintext
