@@ -1,8 +1,10 @@
 import itertools
-from numpy import cov, std
+import numpy as np
 from scipy.stats import pearsonr
 from power_consumption_modeler import PowerConsumptionModeler
 from helpers import *
+
+import time
 
 
 class Attacker:
@@ -26,7 +28,7 @@ class Attacker:
         # For each of the 16 subkeys, store a "subkey guess correlation" dict.
         # Such a dict stores the correlation coefficient for each subkey guess.
         self.subkey_correlation_coeffs = {}
-        for in range(16):
+        for _ in range(16):
             self.subkey_correlation_coeffs = {}
 
     def obtain_full_private_key(self, power_samples):
@@ -100,26 +102,62 @@ class Attacker:
 
                 subkey_guess_consumptions.append(modeled_consumption)
 
-            # Now that we have the subkey's power consumption estimates, we can
-            # find the most correlated trace point for this subkey.
-            best_point = None
-            best_point_pcc = 0
+            # Find out the correlation between the modeled consumptions and the
+            # actual consumptions by computing correlation values for each
+            # subkey guess. 
+            numpoint = len(power_samples[0])
+            # For each point, keep track of the sum and both denominators in
+            # the correlation function computed as
+            # r_i,j = sumnum / np.sqrt(sumden1 * sumden2).
+            sumnum = np.zeros(numpoint)
+            sumden1 = np.zeros(numpoint)
+            sumden2 = np.zeros(numpoint)
 
-            print("Finding out which subkey correlated the most...")
-            point_amnt = len(power_samples[0])  # Assume equal point amounts
-            for point in range(point_amnt):
-                volts_at_this_point = [samp[point] for samp in power_samples]
-                point_pcc = self.pearson_correlation_coeff(
-                    volts_at_this_point, subkey_guess_consumptions)
+            numtraces = len(power_samples)
 
-                if (abs(point_pcc) > abs(best_point_pcc)):
-                    best_point = point
-                    best_point_pcc = point_pcc
+            # Mean of hypothesis
+            modeled_cons_mean = np.mean(subkey_guess_consumptions, dtype=np.float64)
 
-            # The best point PCC represents this subkey's best PCC.
-            pcc = best_point_pcc
-            # Store the coefficient for guessing entropy analysis
-            self.subkey_correlation_coeffs[subkey_guess] = abs(pcc)
+            # Mean of all points in trace
+            traces_mean = np.mean(power_samples, axis=0, dtype=np.float64)
+
+            # Compute the correlation for all trace points at the same time.
+            # Build up the correlation value over time by iterating over all
+            # power traces.
+            for trace_num in range(0, numtraces):
+                hdiff = subkey_guess_consumptions[trace_num] - modeled_cons_mean
+                tdiff = power_samples[trace_num] - traces_mean
+
+                sumnum = sumnum + hdiff*tdiff
+                sumden1 = sumden1 + hdiff*hdiff
+                sumden2 = sumden2 + tdiff*tdiff
+
+            # TODO: Store ranking of PCC values for guessing entropy
+            pcc = max(abs(sumnum / np.sqrt(sumden1 * sumden2)))
+
+            # # Now that we have the subkey's power consumption estimates, we can
+            # # find the most correlated trace point for this subkey.
+            # best_point = None
+            # best_point_pcc = 0
+
+            # print("Finding out at which point the subkey correlated the most...")
+            # point_amnt = len(power_samples[0])  # Assume equal point amounts
+            # correlation_start = time.time()
+            # for point in range(point_amnt):
+            #     volts_at_this_point = [samp[point] for samp in power_samples]
+            #     point_pcc = self.pearson_correlation_coeff(
+            #         volts_at_this_point, subkey_guess_consumptions)
+
+            #     if (abs(point_pcc) > abs(best_point_pcc)):
+            #         best_point = point
+            #         best_point_pcc = point_pcc
+            # correlation_end = time.time()
+            # print(f"Found best correlating point for this subkey in {correlation_end - correlation_start} seconds")
+
+            # # The best point PCC represents this subkey's best PCC.
+            # pcc = best_point_pcc
+            # # Store the coefficient for guessing entropy analysis
+            # self.subkey_correlation_coeffs[subkey_guess] = abs(pcc)
 
             # Use it to keep track of the best subkey PCC.
             if (abs(pcc) > abs(best_subkey_pcc)):
@@ -149,8 +187,30 @@ class Attacker:
             consumption always increases when the modeled consumption
             increases, and -1 means they always decrease at the same time.
         """
-        # PCC = cov(AC, MC)/stddev(AC)*stddev(MC)
-        (pcc, _) = pearsonr(actual_consumptions, modeled_consumptions)
+        # PCC = np.cov(AC, MC)/stddev(AC)*stddev(MC)
+        # (pcc, _) = pearsonr(actual_consumptions, modeled_consumptions)
+
+        # Initialize arrays &amp; variables to zero
+        numpoint = 5000
+        sumnum = np.zeros(numpoint)
+        sumden1 = np.zeros(numpoint)
+        sumden2 = np.zeros(numpoint)
+
+        # Mean of hypothesis
+        modeled_cons_mean = np.mean(modeled_consumptions, dtype=np.float64)
+
+        # Mean of all points in trace
+        meant = np.mean(actual_consumptions, axis=0, dtype=np.float64)
+
+        hdiff = (modeled_consumptions[tnum] - modeled_cons_mean)
+        tdiff = actual_consumptions[tnum, :] - meant
+
+        sumnum = sumnum + (hdiff*tdiff)
+        sumden1 = sumden1 + hdiff*hdiff
+        sumden2 = sumden2 + tdiff*tdiff
+
+        pcc = sumnum / np.sqrt(sumden1 * sumden2)
+
         return pcc
 
     def extract_subbytes_trace_points(self, power_trace):

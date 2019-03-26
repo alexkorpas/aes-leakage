@@ -22,7 +22,7 @@ class FullAttackTest(unittest.TestCase):
         # "key.npy" is stored as an array of identical keys, so get key[0]
         known_key_bytes = key[0]
 
-        self.assertEqual(known_key_bits, computed_key_bits)
+        self.assertEqual(known_key_bits, computed_key_bytes)
 
 
 if __name__ == '__main__':
