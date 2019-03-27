@@ -24,10 +24,6 @@ class FullAttackTest(unittest.TestCase):
 
         self.assertEqual(list(known_key_bytes), computed_key_bytes)
 
-    def test_guessing_entropy_calc(self):
-        subkey_corr_coeffs = {}
-        pass
-
 
 if __name__ == '__main__':
     unittest.main()
