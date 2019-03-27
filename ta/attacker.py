@@ -91,6 +91,7 @@ class Attacker:
         for subkey in POSSIBLE_SUBKEYS:
             # Only look at the traces where this subkey was used
             traces = power_samples[subkey]
+            trace_amnt = len(traces)
             
             # Compute covariance matrix manually for each i,j point combination
             cov_mat = np.zeros(shape=(poi_amnt, poi_amnt), dtype=float)
@@ -99,28 +100,32 @@ class Attacker:
             means = {}
             variances = {}
             for poi_i in range(poi_amnt):
-                voltages_at_poi_i = [trace[poi_i] for trace in traces]
+                poi_i_volts = [trace[poi_i] for trace in traces]
 
-                mean_volt = np.mean(voltages_at_poi_i)
-                variance = [(volt - mean_volt)**2 for volt in voltages_at_poi_i]
+                mean_i = np.mean(poi_i_volts)
+                variance = compute_variance(traces, trace_amnt, poi_i_volts,
+                                            mean_i)
 
-                means[poi_i] = mean_volt
+                means[poi_i] = mean_i
                 variances[poi_i] = variance
 
                 for poi_j in range(poi_amnt):
                     if poi_i == poi_j:
                         cov_mat[poi_i, poi_j] = variances[poi_i]
                         continue
-
-                    if poi_j not in variances:
-                        poj_j_volts = [trace[poi_j] for trace in traces]
-                        mean_volt = np.mean(poj_j_volts)
-
-                        variance_j = \
-                            [(volt - mean_volt)**2 for volt in poj_j_volts]
-                        variances[poi_j] = variance_j
                     
-                    cov_mat[poi_i, poi_j] = variances[poi_j]
+                    # Early stop for symmetric values in the array
+                    if cov_mat[poi_j, poi_i] != 0.0:
+                        cov_mat[poi_i, poi_j] = cov_mat[poi_j, poi_i]
+                    
+                    poi_j_volts = [trace[poi_j] for trace in traces]
+                    mean_j = np.mean(poi_j_volts)
+
+                    # Compute covariance between points i and j
+                    cov_mat[poi_i, poi_j] = compute_covariance(
+                        traces, trace_amnt, poi_i_volts, poi_j_volts,
+                        mean_i, mean_j
+                    )
 
             # Template = (means, cov_matrix) for this subkey.
             templates[subkey] = (means, cov_mat)

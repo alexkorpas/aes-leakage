@@ -36,3 +36,24 @@ def bit_tuple_to_string(bits):
         string -- The string representation of the given bits.
     """
     return "".join([str(bit) for bit in bits])
+
+
+def compute_variance(traces, trace_len, volts_at_poi_i, mean_i):
+    variance = 0
+    for volt in volts_at_poi_i:
+        variance += (volt - mean_i)**2
+    variance /= trace_len
+
+    return variance
+
+def compute_covariance(traces, trace_len, volts_at_poi_i, volts_at_poi_j,
+                       mean_i, mean_j):
+    cov_i_j = 0
+    for volt_index in range(trace_len):
+        volt_i = volts_at_poi_i[volt_index]
+        volt_j = volts_at_poi_j[volt_index]
+
+        cov_i_j += (volt_i - mean_i) * (volt_j - mean_j)
+    cov_i_j /= trace_len
+
+    return cov_i_j
