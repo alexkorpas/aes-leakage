@@ -89,26 +89,43 @@ class Attacker:
         poi_amnt = len(power_samples[0x00])
 
         for subkey in POSSIBLE_SUBKEYS:
+            # Only look at the traces where this subkey was used
             traces = power_samples[subkey]
+            
+            # Compute covariance matrix manually for each i,j point combination
+            cov_mat = np.zeros(shape=(poi_amnt, poi_amnt), dtype=float)
 
             # Calculate the mean voltage and variance values for each POI
             means = {}
             variances = {}
-            for poi_index in range(poi_amnt):
-                traces = list(power_samples.values())
-                voltages_at_poi = [trace[poi_index] for trace in traces]
+            for poi_i in range(poi_amnt):
+                voltages_at_poi_i = [trace[poi_i] for trace in traces]
 
-                mean_volt = np.mean(voltages_at_poi)
-                variance = [(volt - mean_volt)**2 for volt in voltages_at_poi]
+                mean_volt = np.mean(voltages_at_poi_i)
+                variance = [(volt - mean_volt)**2 for volt in voltages_at_poi_i]
 
-                means[poi_index] = mean_volt
-                variances[poi_index] = variance
-            
-            # TODO: Compute cov matrix using either the variances or numpy.cov
-            covariance_matrix = None
+                means[poi_i] = mean_volt
+                variances[poi_i] = variance
+
+                for poi_j in range(poi_amnt):
+                    if poi_i == poi_j:
+                        cov_mat[poi_i, poi_j] = variances[poi_i]
+                        continue
+
+                    if poi_j not in variances:
+                        poj_j_volts = [trace[poi_j] for trace in traces]
+                        mean_volt = np.mean(poj_j_volts)
+
+                        variance_j = \
+                            [(volt - mean_volt)**2 for volt in poj_j_volts]
+                        variances[poi_j] = variance_j
+                    
+                    cov_mat[poi_i, poi_j] = variances[poi_j]
 
             # Template = (means, cov_matrix) for this subkey.
-            templates[subkey] = (means, covariance_matrix)
+            templates[subkey] = (means, cov_mat)
+        
+        return templates
 
     
     def find_points_of_interest(self, power_samples):
