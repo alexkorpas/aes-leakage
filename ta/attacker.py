@@ -21,6 +21,13 @@ class Attacker:
         """
         self.plaintexts = plaintexts
 
+        # For each subkey, store the means of each point over all traces
+        self.point_means = {}
+        for i in range(256):
+            self.point_means[i] = {}
+
+        self.points_of_interest
+
     def obtain_full_private_key(self):
         """Computes the full private key used in AES128 by computing each of
         its 16 subkeys. This is done by constructing a template for each
@@ -75,6 +82,63 @@ class Attacker:
 
         return best_subkey
 
+    def find_points_of_interest(self, power_samples):
+        # Find points that have high variance for different encryption runs
+
+        point_amnt = len(power_samples[0][0])
+        means = {} # For each possible subkey, store the mean of all its traces
+
+        # For each subkey, compute the mean for each point over its traces
+        for subkey in POSSIBLE_SUBKEYS:
+            traces = power_samples[subkey]
+
+            for point_i in range(point_amnt):
+                point_i_volts = [trace[point_i] for trace in traces]
+                mean_i = np.mean(point_i_volts)
+
+                self.point_means[subkey][point_i] = mean_i
+        
+        # Compute sum of differences for every i with every j
+        sums_of_diffs = {}
+        for point_i in range(point_amnt):
+            sum_of_diffs = 0
+
+            for subkey1 in POSSIBLE_SUBKEYS:
+                mean1 = self.point_means[subkey1][point_i]
+
+                for subkey2 in POSSIBLE_SUBKEYS:
+                    mean2 = self.point_means[subkey2][point_i]
+
+                    sum_of_diffs += abs(mean1 - mean2)
+            sums_of_diffs[point_i] = sum_of_diffs
+        
+        pois = self.extract_pois_from_sums_of_diffs(sums_of_diffs)
+        return pois
+        
+    def extract_pois_from_sums_of_diffs(self, sums_of_diffs):
+        amnt_of_pois = 10
+        radius = 50
+
+        # Select points of interest, which are the points with the highest
+        # sum of differences over all traces.
+        pois = []
+        for i in range(amnt_of_pois):
+            # Get the point index with the maximum sum of difference.
+            # Do this by finding the max of a pair (= an item) with the
+            # operator.itemgetter(1) method, which selects the maximum by
+            # looking at item 1 of the pair instead of at item 0.
+            max_sod_poi = max(stats.items(), key=operator.itemgetter(1))[0]
+            pois.append(max_sod_poi)
+
+            # Remove neighbouring points from the points to look at
+            for j in range (max_sod_poi - radius, max_sod_poi + radius):
+                if j not in sums_of_diffs:
+                    continue
+
+                del(sums_of_diffs[j])
+        
+        return pois
+
     def construct_subkey_templates(self, power_samples):
         # power_samples is a dict with:
         #   k = subkey, v = list of all samples for that subkey
@@ -85,8 +149,11 @@ class Attacker:
         # that subkey's traces.
         templates = {}
 
-        # TODO: Only create templates for the points of interest
-        poi_amnt = len(power_samples[0x00])
+        # Only create templates for the points of interest
+        pois = self.find_points_of_interest(power_samples)
+        power_samples = [power_samples[i] for i in pois]
+
+        poi_amnt = len(power_samples[0][0])
 
         for subkey in POSSIBLE_SUBKEYS:
             # Only look at the traces where this subkey was used
@@ -131,18 +198,6 @@ class Attacker:
             templates[subkey] = (means, cov_mat)
         
         return templates
-
-    
-    def find_points_of_interest(self, power_samples):
-        # Find points that have high variance for different encryption runs
-        points_of_interest = [] # List of indexes in a power trace
-
-        means = {} # For each possible subkey, store the mean of all its traces
-        for subkey in POSSIBLE_SUBKEYS:
-            traces = power_samples[subkey]
-            
-            # TODO: get means and sums of differences to find all POI
-
 
     def get_subplaintext(self, plaintext_index, block_nr, subbyte_nr):
         # AES uses blocks of 128 bits. Set the index at the start of the block.
