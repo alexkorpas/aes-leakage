@@ -1,8 +1,7 @@
-import itertools
-
 import numpy as np
 
 from helpers import *
+from scipy.stats import multivariate_normal
 
 
 POSSIBLE_SUBKEYS = get_possible_byte_combs()
@@ -26,7 +25,11 @@ class Attacker:
         for i in range(256):
             self.point_means[i] = {}
 
-        self.points_of_interest
+        # Save the points of interest once they're computed
+        self.pois = []
+
+        # Store the subkey guess templates for easy access
+        self.templates = {}
 
     def obtain_full_private_key(self):
         """Computes the full private key used in AES128 by computing each of
@@ -51,9 +54,7 @@ class Attacker:
             subkey = self.find_used_subkey(power_samples, block_nr, subkey_nr)
             final_subkeys.append(subkey)
 
-        private_key = list(itertools.chain.from_iterable(final_subkeys))
-
-        return bit_tuple_to_string(private_key)
+        return private_key
 
     def find_used_subkey(self, power_samples, plaintext_block_nr,
                          subkey_byte_index):
@@ -136,7 +137,8 @@ class Attacker:
                     continue
 
                 del(sums_of_diffs[j])
-        
+
+        self.pois = pois
         return pois
 
     def construct_subkey_templates(self, power_samples):
@@ -197,7 +199,33 @@ class Attacker:
             # Template = (means, cov_matrix) for this subkey.
             templates[subkey] = (means, cov_mat)
         
+        self.templates = templates
         return templates
+
+    def execute_template_attack(self, traces):
+        # For each subkey guess, store the combined probability density
+        # function's result over all traces.
+        subkey_guess_pdfs = np.zeros(256)
+
+        # For each trace, store the probability density function 
+
+        # Only look at te points of interest.
+        poi_traces = []
+        for trace in traces:
+            trace_at_pois = [trace[i] for i in self.pois]
+            poi_traces.append(trace_at_pois)
+
+            for subkey_guess in POSSIBLE_SUBKEYS:
+                # Compute the normal dist for the given subkey guess's template
+                normal_dist = multivariate_normal(self.templates[subkey_guess])
+
+                # Use the normal dist to compute the PDF values for this trace
+                trace_pdf = normal_dist.pdf(trace_at_pois)
+
+    
+    def prob_density_func(self, subkey_guess):
+        pass
+        
 
     def get_subplaintext(self, plaintext_index, block_nr, subbyte_nr):
         # AES uses blocks of 128 bits. Set the index at the start of the block.
