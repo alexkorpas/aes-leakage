@@ -31,6 +31,12 @@ class Attacker:
         # Store the subkey guess templates for easy access
         self.templates = {}
 
+        # For each of the 16 subkeys, store a "subkey guess correlation" dict.
+        # Such a dict stores the correlation coefficient for each subkey guess.
+        self.subkey_corr_coeffs = {}
+        for i in range(16):
+            self.subkey_corr_coeffs[i] = {}
+
     def obtain_full_private_key(self):
         """Computes the full private key used in AES128 by computing each of
         its 16 subkeys. This is done by constructing a template for each
@@ -202,7 +208,7 @@ class Attacker:
         self.templates = templates
         return templates
 
-    def execute_template_attack(self, traces):
+    def execute_template_attack(self, traces, subkey_byte_index):
         # For each subkey guess, store the combined probability density
         # function's result over all traces.
         subkey_guess_pdfs = np.zeros(256)
@@ -219,19 +225,16 @@ class Attacker:
                 # Compute the normal dist for the given subkey guess's template
                 normal_dist = multivariate_normal(self.templates[subkey_guess])
 
-                # Use the normal dist to compute the PDF values for this trace
-                trace_pdf = normal_dist.pdf(trace_at_pois)
-
-    
-    def prob_density_func(self, subkey_guess):
-        pass
+                # Use the normal dist to compute the PDF values for this trace.
+                # This value represents the likelihood of this trace occurring
+                # for the given subkey. Compute the log of it to negate float
+                # precision errors when computing the product of PDF values.
+                trace_logpdf = normal_dist.logpdf(trace_at_pois)
+                subkey_guess_pdfs[subkey_guess] += trace_logpdf
         
+        # Store the sk guess PDF values for the subkey we're currently finding 
+        subkey_corr_coeffs[subkey_byte_index] = subkey_guess_pdfs
 
-    def get_subplaintext(self, plaintext_index, block_nr, subbyte_nr):
-        # AES uses blocks of 128 bits. Set the index at the start of the block.
-        bit_index = block_nr*128
-        bit_index += subbyte_nr*8  # Set the index at the byte under test
-
-        plaintext_bits = self.plaintexts[plaintext_index]
-        # Return the byte at this location
-        return plaintext_bits[bit_index:bit_index + 8]
+        # Our best guess is the one with the highest PDF product for each POI
+        best_subkey = subkey_guess_pdfs.argmax()
+        return best_subkey
