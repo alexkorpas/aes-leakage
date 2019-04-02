@@ -47,31 +47,32 @@ class Attacker:
         for i in range(16):
             self.subkey_corr_coeffs[i] = {}
 
-    def obtain_full_private_key(self, power_samples):
+    def obtain_full_private_key(self, traces, plaintexts):
         """Computes the full private key used in AES128 by computing each of
-        its 16 subkeys. This is done with power samples produced by encryption
-        of known plaintexts.
+        its 16 subkeys. This is done with power traces produced by encryption
+        of known plaintexts. Each subkey's power consumption is compared with
+        preprocessed consumption templates.
 
         Arguments:
-            power_samples { {[int]: [float]} } - A dictionary of power traces
-            where the key is the 16 byte plaintext that was used in the trace.
-            A trace is a list of floats that represents the obtained output
+            traces { { [[float]] } - A list of attack traces, where each
+            trace is a list of floats that represents the obtained output
             for one plaintext encryption. Each trace may use a different
             encryption key.
+            plaintexts { [[int]] } -- The plaintext byte sequences that were
+            encrypted to obtain power traces from the algorithm. Each sequence
+            is a list of decimal numbers that represent bytes.
 
         Returns:
             [int] -- The full 128-bit key as a list of 16 integers.
         """
-        private_key = []  # Our best full key gues as a list of binary values.
+        private_key = []  # Our best full key guess as a list of subkey bytes.
 
         block_nr = 0  # It doesn't matter which plaintext block we look at
 
         # Assume the templates have already been created
-        final_subkeys = []  # 16 subkeys of 8 bits each
         for subkey_nr in range(0, 16):
-            traces = None  # TODO: Sort traces by subkey location
             subkey = self.find_used_subkey_with_templates(traces, subkey_nr)
-            final_subkeys.append(subkey)
+            private_key.append(subkey)
 
         return private_key
 
