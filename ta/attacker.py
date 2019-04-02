@@ -37,57 +37,32 @@ class Attacker:
         for i in range(16):
             self.subkey_corr_coeffs[i] = {}
 
-    def obtain_full_private_key(self):
+    def obtain_full_private_key(self, power_samples):
         """Computes the full private key used in AES128 by computing each of
-        its 16 subkeys. This is done by constructing a template for each
-        possible key and comparing the
+        its 16 subkeys. This is done with power samples produced by encryption
+        of known plaintexts.
+
+        Arguments:
+            power_samples { {[int]: [float]} } - A dictionary of power traces
+            where the key is the 16 byte plaintext that was used in the trace.
+            A trace is a list of floats that represents the obtained output
+            for one plaintext encryption. Each trace may use a different
+            encryption key.
 
         Returns:
-            string -- The full 128-bit key.
+            [int] -- The full 128-bit key as a list of 16 integers.
         """
-
         private_key = []  # Our best full key gues as a list of binary values.
-
-        # Record n power consumption samples of the full run of the alg.
-        # Preferably, each sample is recorded for a different plaintext.
-        # All samples should use the same key for encryption.
-        power_samples = []
 
         block_nr = 0  # It doesn't matter which plaintext block we look at
 
         final_subkeys = []  # 16 subkeys of 8 bits each
         for subkey_nr in range(0, 16):
-            subkey = self.find_used_subkey(power_samples, block_nr, subkey_nr)
+            traces = None  # TODO: Sort traces by subkey location
+            subkey = self.find_used_subkey_with_templates(traces, subkey_nr)
             final_subkeys.append(subkey)
 
         return private_key
-
-    def find_used_subkey(self, power_samples, plaintext_block_nr,
-                         subkey_byte_index):
-        """Finds the actual used subkey for AES128 encryption at a given point
-        in the plaintext. A subkey is found by...
-        
-        Arguments:
-            power_samples {[[int]]} -- The actual power consumption traces at
-            the desired point for each plaintext encryption. Given as as a
-            list of bit tuples.
-            plaintext_block_nr {int} -- Integer to indicate where in the
-            plaintext the inspected block starts.
-            subkey_byte_index {int} -- Integer to indicate which byte we're
-            inspecting in the given block.
-        
-        Returns:
-            [int] -- The best subkey guess as a tuple of 8 integers.
-        """
-        # Compute Pearson's Correlation Coefficient (PCC) for each possible
-        # subkey and use the PCCs to find the best subkey.
-        best_subkey = (0, 0, 0, 0, 0, 0, 0, 0)
-        best_subkey_pcc = 0
-
-        for subkey_guess in POSSIBLE_SUBKEYS:
-            pass
-
-        return best_subkey
 
     def find_points_of_interest(self, power_samples):
         # Find points that have high variance for different encryption runs
@@ -208,7 +183,23 @@ class Attacker:
         self.templates = templates
         return templates
 
-    def execute_template_attack(self, traces, subkey_byte_index):
+    def find_used_subkey_with_templates(self, traces, subkey_byte_index):
+        """Finds the actual used subkey for AES128 encryption at a given point
+        in the plaintext, using a given set of attack traces. A subkey is found by modeling the power
+        consumptions for each of 2^8 subkey guesses and checking which of
+        the guesses correlates the most with the actual power consumptions.
+
+        Arguments:
+            traces { [float] } -- The actual power consumption traces
+            corresponding to the given subkey byte location. Given as a list of
+            floats.
+            subkey_byte_index {int} -- Integer to indicate which byte we're
+            inspecting in a given block. Assume we're always looking at the
+            first block.
+
+        Returns:
+            int -- The best subkey guess as an integer.
+        """
         # For each subkey guess, store the combined probability density
         # function's result over all traces.
         subkey_guess_pdfs = np.zeros(256)
