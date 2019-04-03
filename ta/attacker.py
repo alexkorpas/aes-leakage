@@ -74,6 +74,7 @@ class Attacker:
         for subkey_nr in range(0, 16):
             subkey = self.find_used_subkey_with_templates(traces, plaintexts, subkey_nr)
             private_key.append(subkey)
+            print(f"Subkey {subkey_nr} = {subkey}")
 
         return private_key
 
@@ -191,6 +192,7 @@ class Attacker:
             corresponding to that HW, and a 2D covariance matrix that
             describes the variance in values between each POI.
         """
+        original_samps = power_samples
         # Categorise the traces by Hamming weight, so we can construct
         # an accurate template for each HW.
         power_samples = self.group_traces_by_hammweight(power_samples)
@@ -292,7 +294,9 @@ class Attacker:
 
                 # Compute the normal dist for the computed HW's template
                 (means, covmat) = self.templates[sim_hw]
-                normal_dist = multivariate_normal(means, covmat)
+                # print(f"Means:\n{means}")
+                # print(f"CovMat:\n{covmat}")
+                normal_dist = multivariate_normal(list(means.values()), covmat)
 
                 # Use the normal dist to compute the PDF values for this trace.
                 # This value represents the likelihood of this trace occurring
@@ -302,7 +306,9 @@ class Attacker:
                 subkey_guess_pdfs[subkey_guess] += trace_logpdf
 
         # Store the sk guess PDF values for the subkey we're currently finding
-        subkey_corr_coeffs[subkey_byte_i] = subkey_guess_pdfs
+        self.subkey_corr_coeffs[subkey_byte_i] = subkey_guess_pdfs
+        print(f"logpdf of 43: {subkey_guess_pdfs[43]}")
+        print(subkey_guess_pdfs.argsort()[-10:])
 
         # Our best guess is the one with the highest PDF product over all POI
         best_subkey = subkey_guess_pdfs.argmax()
