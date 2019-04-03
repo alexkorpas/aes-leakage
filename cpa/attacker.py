@@ -61,10 +61,9 @@ class Attacker:
     def find_used_subkey(self, power_samples, plaintext_block_nr,
                          subkey_byte_index):
         """Finds the actual used subkey for AES128 encryption at a given point
-        in the plaintext. This point should coincide with the point at which
-        each power sample was taken. A subkey is found by modeling the power
-        consumptions for each of 2^8 subkey guesses and checking which of
-        the guesses correlates the most with the actual power consumptions.
+        in the plaintext. A subkey is found by modeling the power consumptions
+        for each of 2^8 subkey guesses and checking which of the guesses
+        correlates the most with the actual power consumptions.
 
         Arguments:
             power_samples { [[float]] } -- The actual power consumption traces
@@ -201,13 +200,3 @@ class Attacker:
             the consumption values during the subBytes step in the first round.
         """
         return []
-
-    def get_subplaintext(self, plaintext_index, block_nr, subbyte_nr):
-        # AES uses blocks of 128 bits. Set the index at the start of the block.
-        bit_index = block_nr*128
-        bit_index += subbyte_nr*8  # Set the index at the byte under test
-
-        plaintext_bits =  \
-            [int(char) for char in self.plaintexts[plaintext_index]]
-        # Return the byte at this location
-        return plaintext_bits[bit_index:bit_index + 8]
