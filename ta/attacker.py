@@ -1,10 +1,11 @@
-import numpy as np
-
+import operator
 from collections import defaultdict
-from helpers import *
-from power_consumption_modeler import PowerConsumptionModeler
+
+import numpy as np
 from scipy.stats import multivariate_normal
 
+from helpers import *
+from power_consumption_modeler import PowerConsumptionModeler
 
 POSSIBLE_SUBKEYS = range(256)  # Integers [0..255]
 POSS_BYTE_HAMMWEIGHTS = range(9)
@@ -71,7 +72,7 @@ class Attacker:
 
         # Assume the templates have already been created
         for subkey_nr in range(0, 16):
-            subkey = self.find_used_subkey_with_templates(traces, subkey_nr)
+            subkey = self.find_used_subkey_with_templates(traces, plaintexts, subkey_nr)
             private_key.append(subkey)
 
         return private_key
@@ -111,17 +112,21 @@ class Attacker:
 
     def extract_pois_from_sums_of_diffs(self, sums_of_diffs):
         amnt_of_pois = 10
-        radius = 50
+        radius = 25
 
         # Select points of interest, which are the points with the highest
         # sum of differences over all traces.
         pois = []
         for i in range(amnt_of_pois):
+            if len(sums_of_diffs) == 0:
+                break
+
             # Get the point index with the maximum sum of difference.
             # Do this by finding the max of a pair (= an item) with the
             # operator.itemgetter(1) method, which selects the maximum by
             # looking at item 1 of the pair instead of at item 0.
-            max_sod_poi = max(stats.items(), key=operator.itemgetter(1))[0]
+            max_sod_poi = \
+                max(sums_of_diffs.items(), key=operator.itemgetter(1))[0]
             pois.append(max_sod_poi)
 
             # Remove neighbouring points from the points to look at
@@ -152,15 +157,15 @@ class Attacker:
         traces_amnt = len(power_samples)
 
         # Group traces by Hamming weight of each possible subkey
-        grouped_traces = [[] for _ in range(9)]
+        grouped_traces = defaultdict(list)
 
         # TODO: Extend simulation and grouping to all bytes
         # Compute SBOX simulation for the 9th byte of each plaintext/key combo.
         sbox_sim = lambda subkey, pt_byte: apply_sbox(subkey ^ pt_byte)
-        sbox_sims = [sbox_sim(self.plaintexts[i][9], self.keys[i][9]) 
+        sbox_sims = [sbox_sim(self.plaintexts[i][9], self.keys[i][9])
                      for i in range(traces_amnt)]
         sim_hamm_weights = \
-            [self.power_modeler.subkey_hamm_weight[sim] for sim in sbox_sims]
+            [self.power_modeler.subkey_hamm_weight(sim) for sim in sbox_sims]
 
         # For each trace, categorise it by the Hamming weight value of its SBOX
         # simulation value.
@@ -197,9 +202,13 @@ class Attacker:
 
         # Only create templates for the points of interest
         pois = self.find_points_of_interest(power_samples)
-        power_samples = [power_samples[i] for i in pois]
+        for (hw, traces) in power_samples.items():
+            poi_traces = []
+            for trace in traces:
+                poi_traces.append([trace[i] for i in pois])
+            power_samples[hw] = poi_traces
 
-        poi_amnt = len(power_samples[0][0])
+        poi_amnt = len(pois)
 
         for hammweight in range(9):
             # Only look at the traces of which the SBOX sim has this HW
@@ -277,7 +286,7 @@ class Attacker:
             for subkey_guess in POSSIBLE_SUBKEYS:
                 # Simulate the power consumption for usage of this key by
                 # simulating the SBOX operation and computing the Hamm weight.
-                sbox_sim = pt[subkey_byte_i] ^ subkey_guess[subkey_byte_i]
+                sbox_sim = pt[subkey_byte_i] ^ subkey_guess
                 sim_hw = \
                     self.power_modeler.subkey_hamm_weight(apply_sbox(sbox_sim))
 
