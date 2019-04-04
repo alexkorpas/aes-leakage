@@ -61,10 +61,9 @@ class Attacker:
     def find_used_subkey(self, power_samples, plaintext_block_nr,
                          subkey_byte_index):
         """Finds the actual used subkey for AES128 encryption at a given point
-        in the plaintext. This point should coincide with the point at which
-        each power sample was taken. A subkey is found by modeling the power
-        consumptions for each of 2^8 subkey guesses and checking which of
-        the guesses correlates the most with the actual power consumptions.
+        in the plaintext. A subkey is found by modeling the power consumptions
+        for each of 2^8 subkey guesses and checking which of the guesses
+        correlates the most with the actual power consumptions.
 
         Arguments:
             power_samples { [[float]] } -- The actual power consumption traces
