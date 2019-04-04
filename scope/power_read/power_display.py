@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import json
 
-TEST_NOISE = "../data/2019-04-02_1/trace_100"
-OUTPUT_PLOT = "../data/out_plot.jpg"
+TEST_NOISE = "../data/output/2019-04-02_1/trace_100"
+OUTPUT_PLOT = "../data/output/out_plot.jpg"
 
 
 class PowerReport:

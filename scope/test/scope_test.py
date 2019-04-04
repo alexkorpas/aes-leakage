@@ -83,8 +83,9 @@ class ScopeTest(unittest.TestCase):
 
         print(len(binary_data))
         s = MockScope()
-        data = s.read_unit_data(CH_MATH, binary_data)
+        data = read_unit_data(binary_data)
         print(data)
+
 
 if __name__ == '__main__':
     unittest.main()
