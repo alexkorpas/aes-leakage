@@ -20,9 +20,11 @@ if __name__ == '__main__':
 
     # Convert traces
     traces = []
-    for line in file: 
+    file = open(plaintexts, "r")
+    for line in file:
         points = line.strip("\n").strip("(").strip(")").split(",")
         trace = [int(point) for point in points]
         traces.append(trace)
+    file.close()
 
     main(plaintexts, traces)
