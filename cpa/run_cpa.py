@@ -28,7 +28,9 @@ if __name__ == '__main__':
         traces.append(trace)
     file.close()
 
-    # Convert plaintexts
+    # Load 1000 plaintexts and only take the amount we need.
     plaintexts = np.load(plaintexts_file)
+    traces_amnt = len(traces)
+    plaintexts = plaintexts[:traces_amnt]
 
     main(plaintexts, traces)
