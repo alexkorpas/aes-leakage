@@ -8,7 +8,7 @@ def main(plaintexts, traces):
     cpa_attacker = Attacker(plaintexts)
     skey = cpa_attacker.obtain_full_private_key(traces)
 
-    print(f"Found the follow secret key:\n{skey}")
+    print(f"Found the following secret key:\n{skey}")
 
 
 if __name__ == '__main__':

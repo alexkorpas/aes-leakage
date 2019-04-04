@@ -83,7 +83,7 @@ class Attacker:
         best_subkey_pcc = 0
 
         for subkey_guess in self.POSSIBLE_SUBKEYS:
-            if subkey_guess in [32, 64, 96, 128]:
+            if subkey_guess in [64, 128, 192, 256]:
                 print(f"Computing PCC for subkey guess {subkey_guess}...")
 
             # For each plaintext, compute the modeled consumption for
@@ -142,6 +142,16 @@ class Attacker:
                 best_subkey = subkey_guess
                 best_subkey_pcc = pcc
 
+        subkey_guess_corr_coeffs = self.subkey_corr_coeffs[subkey_byte_index]
+        sorted_coeffs = [
+            (key, subkey_guess_corr_coeffs[key])
+            for key
+            in sorted(subkey_guess_corr_coeffs,
+                      key=subkey_guess_corr_coeffs.get,
+                      reverse=True)
+        ]
+        best_subkeys = [pair[0] for pair in sorted_coeffs]
+        print(f"Top 10 subkeys for subbyte {subkey_byte_index}:\n{best_subkeys[:10]}")
         return best_subkey
 
     def pearson_correlation_coeff(self, actual_consumptions,
