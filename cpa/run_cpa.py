@@ -1,3 +1,4 @@
+import numpy as np
 import sys
 
 from attacker import Attacker
@@ -15,16 +16,19 @@ if __name__ == '__main__':
     if len(sys.argv) < 3:
         print("Usage: python3 run_cpa.py plaintexts_input traces_input")
 
-    plaintexts = sys.argv[1]
-    raw_traces = sys.argv[2]
+    plaintexts_file = sys.argv[1]
+    raw_traces_file = sys.argv[2]
 
     # Convert traces
     traces = []
-    file = open(plaintexts, "r")
+    file = open(raw_traces_file, "r")
     for line in file:
         points = line.strip("\n").strip("(").strip(")").split(",")
         trace = [int(point) for point in points]
         traces.append(trace)
     file.close()
+
+    # Convert plaintexts
+    plaintexts = np.load(plaintexts_file)
 
     main(plaintexts, traces)
