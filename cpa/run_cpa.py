@@ -16,6 +16,13 @@ if __name__ == '__main__':
         print("Usage: python3 run_cpa.py plaintexts_input traces_input")
 
     plaintexts = sys.argv[1]
-    traces = sys.argv[2]
+    raw_traces = sys.argv[2]
+
+    # Convert traces
+    traces = []
+    for line in file: 
+        points = line.strip("\n").strip("(").strip(")").split(",")
+        trace = [int(point) for point in points]
+        traces.append(trace)
 
     main(plaintexts, traces)
