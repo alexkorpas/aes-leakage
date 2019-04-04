@@ -5,7 +5,6 @@ from os import mkdir
 from statistics import stdev
 
 from pyvisa import Resource
-from tqdm import tqdm
 
 from arduino.arduino import Arduino
 from power_read import visa_tools
@@ -13,7 +12,14 @@ from power_read.visa_tools import file_open_append, num_folders
 
 CH_MATH = "MATH"
 PULSE_DURATION = 100  # ms.
-DEFAULT_DATA_ROOT = "../data/"
+DEFAULT_DATA_ROOT = "../data/output/"
+
+
+def read_unit_data(raw_data):
+    raw_data = raw_data.split(b"42500", 1)[1]
+    raw_data = raw_data[:-len(b'\r\n')]
+
+    return struct.unpack(('B' * len(raw_data)), raw_data)
 
 
 class Scope:
@@ -78,7 +84,7 @@ class Scope:
         return visa_tools.get_resource(self.PREFERRED_USB)
 
     def read_channel(self, channel=CH_MATH):
-        return self.read_unit_data(channel, self.read_raw(channel))
+        return read_unit_data(self.read_raw(channel))
 
     def trigger_active(self):
         return self.scope.query('TRIGGER:STATE?') != 'READY\n'
@@ -93,12 +99,6 @@ class Scope:
         # noinspection PyUnresolvedReferences
         raw_value = self.scope.query(f":{channel}:{prop}?").rstrip()
         return raw_value
-
-    def read_unit_data(self, channel, raw_data):
-        raw_data = raw_data.split(b"42500", 1)[1]
-        raw_data = raw_data[:-len(b'\r\n')]
-
-        return struct.unpack(('B' * len(raw_data)), raw_data)
 
     def print_values(self):
         chm = self.read_channel(CH_MATH)
@@ -118,7 +118,7 @@ class Scope:
 
     def write_trace(self, write_raw=False):
         raw = self.read_raw(CH_MATH)
-        trace = self.read_unit_data(CH_MATH, raw)
+        trace = read_unit_data(raw)
 
         if self.data_dir:
             self.file_trace.write(str(trace) + '\n')
