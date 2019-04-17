@@ -91,7 +91,7 @@ class Attacker:
             subkey_guess_consumptions = []
 
             # Compute the simulated subkey consumptions for each plaintext
-            for i in range(len(self.plaintexts)):
+            for i in range(len(power_samples)):
                 # Define the location we're attacking in the full plaintext
                 subplaintext = self.plaintexts[i][subkey_byte_index]
 
