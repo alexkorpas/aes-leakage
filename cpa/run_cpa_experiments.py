@@ -8,7 +8,6 @@ from attacker import Attacker
 # For several amounts of traces, test the guessing entropy with which the CPA
 # attacker is able to guess the first subkey.
 TRACES_AMOUNTS = [1, 10, 100, 1000]
-TRACES_AMOUNTS = [1000]
 TEST_DATA_LOC = "./../test_data"
 
 # Load the 1000 required plaintexts
@@ -24,6 +23,7 @@ atk_analyser = AttackAnalyser()
 # Change this boolean to use either the CW data or our own data
 using_chipwhisp_data = True
 
+guessing_entropies = {}  # For each trace amount, store the corresponding GE
 for trace_amnt in TRACES_AMOUNTS:
     # Load and convert the traces
     traces = []
@@ -45,7 +45,20 @@ for trace_amnt in TRACES_AMOUNTS:
     first_subkey_guessing_entropy = \
         atk_analyser.compute_subkey_guessing_entropy(known_first_subkey, cpa_attacker.subkey_corr_coeffs[0])
     print(f"First subkey guessing entropy for {trace_amnt} traces: {first_subkey_guessing_entropy}")
+    guessing_entropies[trace_amnt] = first_subkey_guessing_entropy
     # full_guessing_entropy = atk_analyser.compute_guessing_entropy(cpa_attacker.subkey_coeffs)
+
+print(f"Final guessing entropies: {guessing_entropies}")
+
+# Plot amount of traces vs. guessing entropy
+plt.title("Subkey guessing entropy ~ Trace amount")
+plt.xlabel("Trace amount")
+plt.ylabel("Guessing entropy")
+plt.xlim(TRACES_AMOUNTS[0], TRACES_AMOUNTS[-1])
+plt.plot(guessing_entropies.keys(), guessing_entropies.values())
+plt.savefig("./data/cpa-traceAmnt-vs-guessingEntropy.png")
+
+print("Stored output plot in ./data/cpa-traceAmnt-vs-guessingEntropy.png")
 
 if __name__ == '__main__':
     pass
