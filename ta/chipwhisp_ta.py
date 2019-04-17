@@ -32,134 +32,150 @@ def cov(x, y):
     return np.cov(x, y)[0][1]
 
 
+# For each of the 16 subkeys, store a "subkey guess correlation" dict.
+# Such a dict stores the sum of log(PDF) over all traces when trying a subkey.
+# The resulting value should correlate with the probability of the subkey guess
+# being the subkey that was actuall used.
+subkey_corr_coeffs = {}
+for i in range(16):
+        subkey_corr_coeffs[i] = {}
+
 # Uncomment to check
 #print(sbox
 #print([hw[s] for s in sbox]
 
+def run(temp_traces_path="./../test_data/traces.npy",
+        temp_ptexts_path="./../test_data/plain.npy",
+        temp_keys_path="./../test_data/key.npy",
+        atk_traces=None,
+        atk_ptexts=None):
+    # Start calculating template
+    # 1: load data
+    tempTraces = np.load(temp_traces_path)[:-1]
+    tempPText  = np.load(temp_ptexts_path)
+    tempKey    = np.load(temp_keys_path)
 
-# Start calculating template
-# 1: load data
-tempTraces = np.load("./../test_data/traces.npy")[:-1]
-tempPText  = np.load("./../test_data/plain.npy")
-tempKey    = np.load("./../test_data/key.npy")
-
-#print(tempPText
-#print(len(tempPText)
-#print(tempKey
-#print(len(tempKey)
-#plt.plot(tempTraces[0])
-#plt.show()
-
-
-# 2: Find HW(sbox) to go with each input
-# Note - we're only working with the first byte here
-tempSbox = [sbox[tempPText[i][0] ^ tempKey[i][0]] for i in range(len(tempPText))] 
-tempHW   = [hw[s] for s in tempSbox]
-
-#print(tempSbox
-#print(tempHW
+    #print(tempPText
+    #print(len(tempPText)
+    #print(tempKey
+    #print(len(tempKey)
+    #plt.plot(tempTraces[0])
+    #plt.show()
 
 
-# 2.5: Sort traces by HW
-# Make 9 blank lists - one for each Hamming weight
-tempTracesHW = [[] for _ in range(9)]
+    # 2: Find HW(sbox) to go with each input
+    # Note - we're only working with the first byte here
+    tempSbox = [sbox[tempPText[i][0] ^ tempKey[i][0]] for i in range(len(tempPText))] 
+    tempHW   = [hw[s] for s in tempSbox]
 
-# Fill them up
-for i in range(len(tempTraces)):
+    #print(tempSbox)
+    #print(tempHW)
+
+
+    # 2.5: Sort traces by HW
+    # Make 9 blank lists - one for each Hamming weight
+    tempTracesHW = [[] for _ in range(9)]
+
+    # Fill them up
+    for i in range(len(tempTraces)):
     HW = tempHW[i]
     tempTracesHW[HW].append(tempTraces[i])
 
-# Switch to numpy arrays
-tempTracesHW = [np.array(tempTracesHW[HW]) for HW in range(9)]
+    # Switch to numpy arrays
+    tempTracesHW = [np.array(tempTracesHW[HW]) for HW in range(9)]
 
-#print(len(tempTracesHW[8])
+    #print(len(tempTracesHW[8])
 
 
-# 3: Find averages
-tempMeans = np.zeros((9, len(tempTraces[0])))
-for i in range(9):
+    # 3: Find averages
+    tempMeans = np.zeros((9, len(tempTraces[0])))
+    for i in range(9):
     tempMeans[i] = np.average(tempTracesHW[i], 0)
-    
-#plt.plot(tempMeans[2])
-#plt.grid()
-#plt.show()
+
+    #plt.plot(tempMeans[2])
+    #plt.grid()
+    #plt.show()
 
 
-# 4: Find sum of differences
-tempSumDiff = np.zeros(len(tempTraces[0]))
-for i in range(9):
+    # 4: Find sum of differences
+    tempSumDiff = np.zeros(len(tempTraces[0]))
+    for i in range(9):
     for j in range(i):
-        tempSumDiff += np.abs(tempMeans[i] - tempMeans[j])
+            tempSumDiff += np.abs(tempMeans[i] - tempMeans[j])
 
-#plt.plot(tempSumDiff)
-#plt.grid()
-#plt.show()
+    #plt.plot(tempSumDiff)
+    #plt.grid()
+    #plt.show()
 
 
-# 5: Find POIs
-POIs = []
-numPOIs = 5
-POIspacing = 5
-for i in range(numPOIs):
+    # 5: Find POIs
+    POIs = []
+    numPOIs = 5
+    POIspacing = 5
+    for i in range(numPOIs):
     # Find the max
     nextPOI = tempSumDiff.argmax()
     POIs.append(nextPOI)
-    
+
     # Make sure we don't pick a nearby value
     poiMin = max(0, nextPOI - POIspacing)
     poiMax = min(nextPOI + POIspacing, len(tempSumDiff))
     for j in range(poiMin, poiMax):
-        tempSumDiff[j] = 0
-    
-#print(POIs
+            tempSumDiff[j] = 0
+
+    #print(POIs
 
 
-# 6: Fill up mean and covariance matrix for each HW
-meanMatrix = np.zeros((9, numPOIs))
-covMatrix  = np.zeros((9, numPOIs, numPOIs))
-for HW in range(9):
+    # 6: Fill up mean and covariance matrix for each HW
+    meanMatrix = np.zeros((9, numPOIs))
+    covMatrix  = np.zeros((9, numPOIs, numPOIs))
+    for HW in range(9):
     for i in range(numPOIs):
-        # Fill in mean
-        meanMatrix[HW][i] = tempMeans[HW][POIs[i]]
-        for j in range(numPOIs):
+            # Fill in mean
+            meanMatrix[HW][i] = tempMeans[HW][POIs[i]]
+            for j in range(numPOIs):
             x = tempTracesHW[HW][:,POIs[i]]
             y = tempTracesHW[HW][:,POIs[j]]
             covMatrix[HW,i,j] = cov(x, y)
-        
-#print(meanMatrix
-#print(covMatrix[0]
+            
+    #print(meanMatrix
+    #print(covMatrix[0]
 
 
-# Template is ready!
-# 1: Load attack traces
-atkTraces = np.load("./../test_data/traces.npy")[:30]
-atkPText  = np.load("./../test_data/plain.npy")[:30]
-atkKey    = np.load("./../test_data/key.npy")[0]
+    # Template is ready!
+    # 1: Load attack traces
+    atkTraces = atk_traces or np.load("./../test_data/traces.npy")[:30]
+    atkPText  = atk_ptexts or np.load("./../test_data/plain.npy")[:30]
+    # atkKey    = np.load("./../test_data/key.npy")[0]
 
-#print(atkTraces
-#print(atkPText
-print(atkKey)
+    #print(atkTraces
+    #print(atkPText
+    # print(atkKey)
 
 
-# 2: Attack
-# Running total of log P_k
-P_k = np.zeros(256)
-for j in range(len(atkTraces)):
+    # 2: Attack
+    # Running total of log P_k
+    P_k = np.zeros(256)
+    for j in range(len(atkTraces)):
     # Grab key points and put them in a small matrix
     a = [atkTraces[j][POIs[i]] for i in range(len(POIs))]
-    
+
     # Test each key
     for k in range(256):
-        # Find HW coming out of sbox
-        HW = hw[sbox[atkPText[j][0] ^ k]]
-    
-        # Find p_{k,j}
-        rv = multivariate_normal(meanMatrix[HW], covMatrix[HW])
-        p_kj = rv.pdf(a)
-   
-        # Add it to running total
-        P_k[k] += np.log(p_kj)
+            # Find HW coming out of sbox
+            HW = hw[sbox[atkPText[j][0] ^ k]]
+
+            # Find p_{k,j}
+            rv = multivariate_normal(meanMatrix[HW], covMatrix[HW])
+            p_kj = rv.pdf(a)
+
+            # Add it to running total
+            P_k[k] += np.log(p_kj)
+            subkey_corr_coeffs[0][k] += np.log  # Only attack/analyse byte 0
 
     # print(our top 5 results so far
     # Best match on the right
-    print(P_k.argsort()[-5:])
+    # print(P_k.argsort()[-5:])
+
+def get_subkey_corr_coeffs():
+    return subkey_corr_coeffs
