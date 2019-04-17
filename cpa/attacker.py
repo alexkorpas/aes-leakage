@@ -31,7 +31,7 @@ class Attacker:
         for i in range(16):
             self.subkey_corr_coeffs[i] = {}
 
-    def obtain_full_private_key(self, power_samples):
+    def obtain_full_private_key(self, power_samples, only_first_byte=False):
         """Computes the full private key used in AES128 by computing each of
         its 16 subkeys. This is done with power samples produced by encryption
         of known plaintexts.
@@ -50,7 +50,8 @@ class Attacker:
         block_nr = 0  # It doesn't matter which plaintext block we look at
 
         final_subkeys = []  # 16 subkeys of 8 bits each, as integers
-        for subkey_nr in range(0, 16):
+        amnt_of_subkeys = 1 if only_first_byte else 16
+        for subkey_nr in range(0, amnt_of_subkeys):
             print(f"Starting to obtain subkey {subkey_nr}!")
             subkey = self.find_used_subkey(power_samples, block_nr, subkey_nr)
             print(f"Found subkey nr {subkey_nr}: {subkey}")

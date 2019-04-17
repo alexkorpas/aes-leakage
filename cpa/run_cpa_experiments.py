@@ -8,26 +8,44 @@ from attacker import Attacker
 # For several amounts of traces, test the guessing entropy with which the CPA
 # attacker is able to guess the first subkey.
 TRACES_AMOUNTS = [1, 10, 100, 1000]
+TRACES_AMOUNTS = [1000]
 TEST_DATA_LOC = "./../test_data"
 
 # Load the 1000 required plaintexts
-plaintexts = np.load("./../data/1000_ptext.npy")
+# plaintexts = np.load("./../data/1000_ptext.npy")  # Our implementation's ptexts
+plaintexts = np.load(f"{TEST_DATA_LOC}/plain.npy")
+
+# Load the given ChipWhisperer test traces if we use them
+cw_traces = np.load(f"{TEST_DATA_LOC}/traces.npy")
 
 cpa_attacker = Attacker(plaintexts)
 atk_analyser = AttackAnalyser()
 
+# Change this boolean to use either the CW data or our own data
+using_chipwhisp_data = True
+
 for trace_amnt in TRACES_AMOUNTS:
     # Load and convert the traces
     traces = []
-    traces_file = open(f"{TEST_DATA_LOC}/{trace_amnt}_traces", "r")
-    for line in traces_file:
-        points = line.strip("\n").strip("(").strip(")").split(",")
-        trace = [int(point) for point in points]
-        traces.append(trace)
-    traces_file.close()
+    if not using_chipwhisp_data:
+        traces_file = open(f"{TEST_DATA_LOC}/{trace_amnt}_traces", "r")
+        for line in traces_file:
+            points = line.strip("\n").strip("(").strip(")").split(",")
+            trace = [int(point) for point in points]
+            traces.append(trace)
+        traces_file.close()
+    else:
+        traces = cw_traces[:trace_amnt]
 
-    skey = cpa_attacker.obtain_full_private_key(traces)
-    full_guessing_entropy = atk_analyser.compute_guessing_entropy(attacker.subkey_coeffs)
+    # If we only obtain the first subkey, it is returned as a singleton list.
+    skey = cpa_attacker.obtain_full_private_key(traces, only_first_byte=True)
+
+    # Compute and store the first subkey's guessing entropy
+    known_first_subkey = 43
+    first_subkey_guessing_entropy = \
+        atk_analyser.compute_subkey_guessing_entropy(known_first_subkey, cpa_attacker.subkey_corr_coeffs[0])
+    print(f"First subkey guessing entropy for {trace_amnt} traces: {first_subkey_guessing_entropy}")
+    # full_guessing_entropy = atk_analyser.compute_guessing_entropy(cpa_attacker.subkey_coeffs)
 
 if __name__ == '__main__':
     pass
