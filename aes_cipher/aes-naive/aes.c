@@ -1,7 +1,6 @@
 #include "aes.h"
 
 /* Global Variables declaration*/
-
 /*  S-box in hexadecimal format */
 uint8_t sbox[256] = {
     // 0     1    2      3     4    5     6     7      8    9     A      B    C     D     E     F
@@ -72,6 +71,45 @@ void SubWord(uint8_t *word, uint8_t *res)
     }
 }
 
+void ShiftRow(uint8_t *state)
+{
+    uint8_t temp;
+
+    temp = state[0];
+    state[0] = state[4];
+    state[4] = state[8];
+    state[8] = state[12];
+    state[12] = temp;
+}
+
+/*! \brief xtime calculation
+ * The value is multiplied by 0x02. This
+ * is implemented at the byte level as a
+ * left shift and XOR with 0x1b if the MSB
+ * of the value (before) shifting is 1. 
+ * \param value  Value for which multiplication to be done
+ */
+uint8_t xtime(uint8_t value)
+{
+    if (value >> 7) {
+        value = value << 1;
+        return (value ^ 0x1b);
+    } else {
+        return value << 1;
+    }
+}
+
+void MixColumn(uint8_t *state)
+{
+    uint8_t temp0 = state[0], temp0 = state[1], temp2 = state[2], temp3 = state[3];
+
+    state[0] = xtime(temp0) ^ xtime(temp1) ^ temp1 ^ temp2 ^ temp3;
+    state[1] = temp0 ^ xtime(temp1) ^ xtime(temp2) ^ temp2 ^ temp3;
+    state[2] = temp0 ^ temp1 ^ xtime(temp2) ^ xtime(temp2) ^ temp3;
+    state[3] = xtime(temp0) ^ temp0 ^ temp1 ^ temp2 ^ xtime(temp3);
+}   
+
+
 // TODO Comment here
 void KeyExpansion(uint8_t *round_key, uint8_t *key)
 {
@@ -102,6 +140,42 @@ void KeyExpansion(uint8_t *round_key, uint8_t *key)
     }
 }
 
+void SubBytes(uint8_t *state) 
+{
+    uint8_t i;
+
+    for (i = 0; i < 16; i++) {
+        state[i]  = sbox[state[i]];
+    }
+}
+
+void ShiftRows(uint8_t *state)
+{
+    ShiftRow(&state[1])
+    ShiftRow(&state[2])
+    ShiftRow(&state[2])
+    ShiftRow(&state[3])
+    ShiftRow(&state[3])
+    ShiftRow(&state[3])
+}
+
+void MixColumns(uint8_t *state)
+{
+    MixColumn(&state[0]);
+    MixColumn(&state[4]);
+    MixColumn(&state[8]);
+    MixColumn(&state[12]);
+}
+
+void AddRoundKey(uint8_t *state, uint8_t round)
+{
+    uint8_t i;
+
+    for (i = 0; i < 16; i++) {
+        state[i]  = (state[i] ^ key_schedule[(round * 16 + i)]);
+    }
+}
+
 /*! \brief Performs Key Expansion
  * \param key  Initial Key vectors received from user
  */
@@ -112,8 +186,44 @@ void aes_init(uint8_t *key, uint8_t *full_key)
     aes_key_ready = true;
 }
 
-// TODO Comment here
-// aes_ret_status_t aes_cipher(uint8_t *plainText, uint8_t *state)
-// {
+aes_ret_status_t aes_cipher(uint8_t *plainText, uint8_t *state)
+{
+    uint8_t byte_count = 0;
+    uint8_t round      = 0;
 
-// }
+    // Check if the aes_init() is called for key expansion
+    if (aes_key_ready != true)
+        return ERR_NO_KEY;
+
+    // Copy input buffer to state to form the cipher state
+    for (byte_count = 0; byte_count < AES_BLOCK_SIZE; byte_count++) {
+        state[byte_count] = plainText[byte_count];
+    }
+
+    // Round 0
+    // AddRoundKey for round 0
+    AddRoundKey(state, 0);
+
+    // Round 1 to 9
+    for (round = 1; round < 10; round++) {
+        /* Sub Bytes */
+        SubBytes(state);
+        /* Shift Rows */
+        ShiftRows(state);
+        /* Mix Columns */
+        MixColumnns(state);
+        /* Add RoundKey */
+        AddRoundKey(state, round);
+    }
+
+    // 10th round without mix columns
+    round = 10;
+    /* Sub Bytes */
+    SubBytes(state);
+    /* Shift Rows */
+    ShiftRows(state);
+    /* Add RoundKey */
+    AddRoundKey(state, round);
+
+    return STATUS_OKAY;
+}
