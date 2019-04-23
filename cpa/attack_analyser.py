@@ -5,13 +5,13 @@ class AttackAnalyser:
     def __init__(self):
         pass
 
-    def compute_guessing_entropy(self, known_key, subkey_corr_coeffs):
+    def compute_guessing_entropy(self, known_key, subkey_coeffs):
         """Computes the guessing entropy for a fully computed key of 16 bytes
         by computing the average of each subkey's guessing entropy.
 
         Arguments:
             known_key {[int]} -- The full, actual secret key as a list of ints.
-            subkey_corr_coeffs { {{}} } -- A dictionary that contains a nested
+            subkey_coeffs { {{}} } -- A dictionary that contains a nested
             dictionary for each of the 16 subkeys. Each of these nested dicts
             contains the computed absolute correlation coefficient for each
             subkey guess that was computed in the attack on the subkey.
@@ -20,7 +20,7 @@ class AttackAnalyser:
             float -- The average guessing entropy of all subkeys.
         """
         partial_guessing_entropies = []
-        for (subkey_index, subkey_guess_corr_coeffs) in subkey_corr_coeffs:
+        for (subkey_index, subkey_guess_corr_coeffs) in subkey_coeffs.items():
             known_subkey = known_key[subkey_index]
             pge = self.compute_subkey_guessing_entropy(
                 known_subkey,

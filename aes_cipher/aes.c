@@ -498,6 +498,7 @@ aes_ret_status_t aes_cipher(uint8_t *plainText, uint8_t *state)
 	}
 
 	// Round 0
+	// AddRoundKey for round 0
 	state[0] ^= key_schedule[0];
 	state[1] ^= key_schedule[1];
 	state[2] ^= key_schedule[2];
