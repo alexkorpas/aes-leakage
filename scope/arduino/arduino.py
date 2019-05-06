@@ -32,10 +32,14 @@ class Arduino:
             try:
                 # self.init()
                 self.pulse()
-                time.sleep(3)
+                time.sleep(1)
+                self.pulse()
+                time.sleep(1)
+                self.pulse()
+                time.sleep(1)
             except KeyboardInterrupt:
-                continue
                 self.close()
+                continue
 
 
 if __name__ == '__main__':

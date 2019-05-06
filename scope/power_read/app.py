@@ -8,8 +8,9 @@ class App:
 
     def run(self, traces):
         self.scope.get_traces(traces)
+        self.scope.close()
 
 
 if __name__ == '__main__':
     app = App(Scope())
-    app.run(1000)
+    app.run(100)

@@ -1,17 +1,21 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-import json
 
-TEST_NOISE = "../data/output/2019-04-02_1/trace_100"
-OUTPUT_PLOT = "../data/output/out_plot.jpg"
+TEST_NOISE = "../data/images/trace"
+OUTPUT_PLOT = "../data/images/trace.png"
+
+
+def trace_parser(trace_line):
+    trace_line = trace_line[1:len(trace_line) - 2]
+    return [int(x) for x in trace_line.split(",")]
 
 
 class PowerReport:
     def __init__(self, input_file=TEST_NOISE):
         with open(input_file, "r") as file:
             first_line = file.readline()
-            self.data = pd.DataFrame(json.loads(first_line))
+            self.data = pd.DataFrame(trace_parser(first_line))
 
     def create_figure(self, filename=OUTPUT_PLOT):
         """
@@ -27,12 +31,13 @@ class PowerReport:
 
         plt.ylabel('Power')
         plt.xlabel("Time")
+        plt.ylim((-100, 300))
 
-        plt.show()
-        plt.savefig(filename)
+        if filename is not None:
+            plt.savefig(filename)
+        else:
+            plt.show()
 
-    # def get_bytes(self):
-    #     rec = self.data.to_records(index=False)
 
 def main():
     p = PowerReport()
