@@ -1,4 +1,4 @@
-/**
+ /**
  * Support and FAQ: visit <a href="http://www.atmel.com/design-support/">Atmel Support</a>
  */
 #ifndef CRYPT_H
@@ -216,6 +216,12 @@ void encrypt(uint8_t *pText, uint8_t *cText)
 
   // Perform ECB Encryption
   digitalWrite(triggerPin, LOW);
+//  for(int i=0; i<10; i++) {
+//    for(int i=0; i<1000; i++) {
+//      int kaas = kaas * 1.219878989117;
+//    }
+//    delay(1);
+//  }
   ecb_encrypt(pText, cText, INPUT_SIZE);
   digitalWrite(triggerPin, HIGH);
   for (volatile int i = 0; i < 1000; i++)
@@ -870,24 +876,21 @@ void encrypt() {
   Serial.println("\n");
 }
 
+String in;
 int seed = 12345;
 
-bool prevInit = true;
-bool prevPulse = true;
-
 void loop() {
-    bool currInit = digitalRead(initPin) == HIGH;
-    if(!currInit && currInit != prevInit) {
-       srand(seed); 
-       Serial.println("reset");
-    }
-    prevInit = currInit;
-
-    bool currPulse = digitalRead(pulsePin) == HIGH;
-    if(!currPulse && currPulse != prevPulse) {
-      delay(50);
-      Serial.println("pulse");
+  if (Serial.available() > 0) {
+    in = char(Serial.read());
+    
+    if(in == "e") {
+      Serial.println("Encrypting...");
       encrypt();
+    } else if(in == "r") {
+      Serial.println("Resetted the pseudo-random function.");
+      srand(seed); 
+    } else {
+      Serial.println("Unknown command: '" + in + "'.");
     }
-    prevPulse = currPulse;
+  }
 }
