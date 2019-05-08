@@ -2,6 +2,7 @@ import unittest
 
 from arduino import arduino
 from power_read import visa_tools
+from power_read.power_display import PowerReport
 from power_read.scope import Scope, read_unit_data, CH_2
 
 
@@ -17,11 +18,15 @@ b'\x08\r\x13\n\x08\x10\x12\n\x13\xf6\x10\x08\x10\x10\x11\x0b\x03\x0c\t\x02\x0e\x
 
 class TestMe(unittest.TestCase):
     def test_image(self):
-        scope = visa_tools.get_resource(Scope.PREFERRED_USB)
+        # scope = visa_tools.get_resource(Scope.PREFERRED_USB)
 
         # trace = read_unit_data(read_raw(scope, CH_2))
         trace = read_unit_data(RAW)
-        print(read_raw(scope, CH_2))
+        with open('../data/images/trace', 'w') as file:
+            file.write(str(trace))
+
+        rep = PowerReport()
+        rep.create_figure()
 
 
 if __name__ == '__main__':

@@ -20,11 +20,8 @@ DEFAULT_DATA_ROOT = "../data/output/"
 
 
 def read_unit_data(raw_data):
-    print(raw_data)
-
     raw_data = raw_data.split(b"42500", 1)[1]
 
-    print(raw_data)
     raw_data = raw_data[:-len(b'\r\n')]
 
     return struct.unpack(('B' * len(raw_data)), raw_data)
