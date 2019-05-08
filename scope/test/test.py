@@ -19,8 +19,8 @@ b'\x08\r\x13\n\x08\x10\x12\n\x13\xf6\x10\x08\x10\x10\x11\x0b\x03\x0c\t\x02\x0e\x
 class TestMe(unittest.TestCase):
     def test_image(self):
         # scope = visa_tools.get_resource(Scope.PREFERRED_USB)
-
         # trace = read_unit_data(read_raw(scope, CH_2))
+
         trace = read_unit_data(RAW)
         with open('../data/images/trace', 'w') as file:
             file.write(str(trace))
