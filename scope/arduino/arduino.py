@@ -4,11 +4,11 @@ import serial
 
 class Arduino:
     SERIAL_RATE = 9600
-    PULSE_ARDUINO = "COM5"
-    INIT_MSG = b"i"
-    PULSE_MSG = b"p"
+    ARDUINO_PORT = "COM14"
+    INIT_MSG = b"r"
+    PULSE_MSG = b"e"
 
-    def __init__(self, port=PULSE_ARDUINO):
+    def __init__(self, port=ARDUINO_PORT):
         self.ser = serial.Serial(port, self.SERIAL_RATE)
 
     def send(self, msg):
@@ -17,12 +17,11 @@ class Arduino:
     def init(self):
         print("Resetting Arduino.")
         self.send(self.INIT_MSG)
-        time.sleep(3.000)
+        time.sleep(1.000)
         print("Arduino is ready to go!")
 
     def pulse(self):
         self.send(self.PULSE_MSG)
-        time.sleep(0.100)
 
     def close(self):
         self.ser.close()

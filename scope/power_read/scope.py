@@ -13,21 +13,25 @@ from power_read.visa_tools import file_open_append, num_folders
 CH_1 = "CH1"
 CH_2 = "CH2"
 CH_MATH = "MATH"
-DEFAULT_CHANNELS = [CH_1, CH_2, CH_MATH]
+DEFAULT_CHANNELS = [CH_2]
 
 PULSE_DURATION = 100  # ms.
 DEFAULT_DATA_ROOT = "../data/output/"
 
 
 def read_unit_data(raw_data):
+    print(raw_data)
+
     raw_data = raw_data.split(b"42500", 1)[1]
+
+    print(raw_data)
     raw_data = raw_data[:-len(b'\r\n')]
 
     return struct.unpack(('B' * len(raw_data)), raw_data)
 
 
 class Scope:
-    PREFERRED_USB = "USB0::0x0699::0x03A5::C050386::INSTR"
+    PREFERRED_USB = "USB0::0x0699::0x0369::C103083::INSTR"
     MAX_SAMPLE_SIZE = 2500
     ARDUINO_TIMEOUT = 10
 
@@ -62,7 +66,7 @@ class Scope:
     def get_arduino():
         return Arduino()
 
-    def get_traces(self, num_traces=1):
+    def get_traces(self, num_traces):
         self.arduino.init()
 
         self.open_files(num_traces)
@@ -118,8 +122,8 @@ class Scope:
         ch1 = self.read_channel()
 
         print()
-        print(f"Length of trace_100: {len(ch1)}.")
-        print(f"StDev of trace_100: {stdev(ch1)}.")
+        print(f"Length of trace: {len(ch1)}.")
+        print(f"StDev of trace: {stdev(ch1)}.")
 
     def write_trace(self):
         for channel in self.trace_files:
@@ -143,7 +147,7 @@ class Scope:
             self.trace_files = {}
             for channel in self.record_channels:
                 channel_low = channel.lower()
-                self.trace_files[channel] = file_open_append(self.data_dir, f"trace_{channel_low}{num_traces}")
+                self.trace_files[channel] = file_open_append(self.data_dir, f"trace_{channel_low}_{num_traces}")
 
     def close_files(self):
         for channel in self.trace_files:
@@ -157,4 +161,4 @@ class Scope:
 
 if __name__ == '__main__':
     scope = Scope()
-    scope.get_traces()
+    scope.get_traces(10)

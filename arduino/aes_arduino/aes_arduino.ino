@@ -15,6 +15,9 @@ typedef struct {
   uint32_t counter;
 } ctr_blk_t;
 
+bool serialMode = true;
+bool debugMode = false;
+
 int triggerPin = 13; 
 
 /*! \brief This function performs ECB encryption on input plain text blocks.
@@ -203,43 +206,36 @@ void encrypt(uint8_t *pText, uint8_t *cText)
   /* Generate key schedule for AES-128 from the Cipher Key */
   aes_init(key_vectors);
 
-  /* Print status messages */
-  Serial.println("AES key generated successfully!..");
-
-  /* Print Input message for user */
-  Serial.println("The message to be encrypted is:");
-  for(int i=0; i<16; i++){
-    Serial.print((char)pText[i]);
+  if(debugMode) {
+    /* Print status messages */
+    Serial.println("AES key generated successfully!..");
+  
+    /* Print Input message for user */
+    Serial.println("The message to be encrypted is:");
+    for(int i=0; i<16; i++){
+      Serial.print((char)pText[i]);
+    }
+    Serial.print("\n");
+    //Serial.println((char*)pText);
   }
-  Serial.print("\n");
-  //Serial.println((char*)pText);
 
   // Perform ECB Encryption
   digitalWrite(triggerPin, LOW);
-//  for(int i=0; i<10; i++) {
-//    for(int i=0; i<1000; i++) {
-//      int kaas = kaas * 1.219878989117;
-//    }
-//    delay(1);
-//  }
   ecb_encrypt(pText, cText, INPUT_SIZE);
   digitalWrite(triggerPin, HIGH);
-  for (volatile int i = 0; i < 1000; i++)
-    ;
-  // Perform ECB Decryption
-  ecb_decrypt(cText, pText1, INPUT_SIZE);
-  Serial.print("Ctext: ");
-  //char buf[1];
-  //for(int i = 0; i < INPUT_SIZE; i++){
-    ///sprintf(buf, "%x ", cText[i]);
-    //Serial.println(buf);
-  //}
-  // Print decrypted message
-  Serial.println("Decrypted message using AES-ECB mode :");
-  for(int i = 0; i<INPUT_SIZE; i++){
-    Serial.print((char)pText1[i]);
+
+  if(debugMode) {
+    // Perform ECB Decryption
+    ecb_decrypt(cText, pText1, INPUT_SIZE);
+    Serial.print("Ctext: ");
+    
+    // Print decrypted message
+    Serial.println("Decrypted message using AES-ECB mode :");
+    for(int i = 0; i<INPUT_SIZE; i++){
+      Serial.print((char)pText1[i]);
+    }
+    Serial.print("\n\n");
   }
-  Serial.print("\n\n");
 }
 
 
@@ -871,20 +867,29 @@ void encrypt() {
   encrypt(pText, cText);
   
   String cipherText = (char*)cText;
-  Serial.println(cipherText.length());
-  Serial.println(cipherText);
-  Serial.println("\n");
+  if(debugMode) {
+    Serial.println(cipherText.length());
+    Serial.println(cipherText);
+    Serial.println("\n");
+  }
 }
 
 String in;
 int seed = 12345;
 
+bool prevInit = false;
+bool currInit = false;
+bool prevPulse = false;
+bool currPulse = false;
+
 void loop() {
+//  if(serialMode) {
   if (Serial.available() > 0) {
     in = char(Serial.read());
     
     if(in == "e") {
       Serial.println("Encrypting...");
+      delay(50);
       encrypt();
     } else if(in == "r") {
       Serial.println("Resetted the pseudo-random function.");
@@ -893,4 +898,19 @@ void loop() {
       Serial.println("Unknown command: '" + in + "'.");
     }
   }
+//  } else {
+//    currInit = digitalRead(initPin) == HIGH;
+//    if(!currInit && currInit != prevInit) {
+//       srand(seed);
+//       Serial.println("reset");
+//    }
+//    prevInit = currInit;
+//
+//    currPulse = digitalRead(pulsePin) == HIGH;
+//    if(!currPulse && currPulse != prevPulse) {
+//      Serial.println("pulse");
+//      encrypt();
+//    }
+//    prevPulse = currPulse;
+//  }
 }
