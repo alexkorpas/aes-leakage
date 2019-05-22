@@ -23,6 +23,10 @@ class Arduino:
     def pulse(self):
         self.send(self.PULSE_MSG)
 
+    def send_msg(self, msg='deadbeefdeadbeef'):
+        self.send(bytes(f'{msg}\n', 'utf-8'))
+        time.sleep(1)
+
     def close(self):
         self.ser.close()
 
@@ -30,12 +34,11 @@ class Arduino:
         while True:
             try:
                 # self.init()
-                self.pulse()
-                time.sleep(1)
-                self.pulse()
-                time.sleep(1)
-                self.pulse()
-                time.sleep(1)
+                self.send_msg()
+                # self.pulse()
+                # time.sleep(1)
+                # self.pulse()
+                # time.sleep(1)
             except KeyboardInterrupt:
                 self.close()
                 continue

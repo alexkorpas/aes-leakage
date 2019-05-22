@@ -13,7 +13,7 @@ from power_read.visa_tools import file_open_append, num_folders
 CH_1 = "CH1"
 CH_2 = "CH2"
 CH_MATH = "MATH"
-DEFAULT_CHANNELS = [CH_2]
+DEFAULT_CHANNELS = [CH_MATH]
 
 PULSE_DURATION = 100  # ms.
 DEFAULT_DATA_ROOT = "../data/output/"
@@ -28,7 +28,7 @@ def read_unit_data(raw_data):
 
 
 class Scope:
-    PREFERRED_USB = "USB0::0x0699::0x0369::C103083::INSTR"
+    PREFERRED_USB = "USB0::0x0699::0x0369::C103071::INSTR"
     MAX_SAMPLE_SIZE = 2500
     ARDUINO_TIMEOUT = 10
 
@@ -63,15 +63,18 @@ class Scope:
     def get_arduino():
         return Arduino()
 
-    def get_traces(self, num_traces):
+    def get_traces(self, pts):
         self.arduino.init()
 
-        self.open_files(num_traces)
-        for i in range(num_traces):
-            self.arduino.pulse()
+        self.open_files(10000)
+        i = 0
+        for pt in pts:
+            i += 1
+
+            self.arduino.send_msg(pt)
             timeout_start = time.time()
 
-            print("Sending pulse, waiting for trigger...")
+            print(f"Sending '{pt}', waiting for trigger...")
             while not self.trigger_active():
                 if (time.time() - timeout_start) > self.ARDUINO_TIMEOUT:
                     print("Timeout! Terminating...")
@@ -81,7 +84,7 @@ class Scope:
             print("Triggered!")
             curr_acquisitions = self.get_num_acquisitions()
 
-            print(f"Capturing trace_100 ({i+1}/{num_traces}), acq = {curr_acquisitions}.")
+            print(f"Capturing trace_100 ({i+1}/{10000}), acq = {curr_acquisitions}.")
             self.write_trace()
 
         self.close_files()
@@ -158,4 +161,7 @@ class Scope:
 
 if __name__ == '__main__':
     scope = Scope()
-    scope.get_traces(10)
+    with open('../data/input/10000_plaintexts', 'r') as file:
+        pts = [line.split(';')[1].encode() for line in file]
+
+    scope.get_traces(pts)
