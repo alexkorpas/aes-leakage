@@ -6,9 +6,13 @@ from attacker import Attacker
 
 def main(plaintexts, traces):    
     cpa_attacker = Attacker(plaintexts)
-    skey = cpa_attacker.obtain_full_private_key(traces)
+    skey = cpa_attacker.obtain_full_private_key(traces, only_first_byte=True)
 
-    print(f"Found the following secret key:\n{skey}")
+    # Our AES key:
+    # {166, 40, 136, 9, 43, 171, 174, 207, 79, 210, 21, 22, 247, 60, 126}
+    # Our ptexts should be stored in ./../data/1000_ptext.npy
+
+    print(f"First found subkey: {skey[0]}")
 
 
 if __name__ == '__main__':
