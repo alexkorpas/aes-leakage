@@ -24,7 +24,7 @@ def read_unit_data(raw_data):
 
     raw_data = raw_data[:-len(b'\r\n')]
 
-    return struct.unpack(('B' * len(raw_data)), raw_data)
+    return struct.unpack(('b' * len(raw_data)), raw_data)
 
 
 class Scope:
