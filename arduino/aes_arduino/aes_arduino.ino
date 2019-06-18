@@ -16,7 +16,7 @@ typedef struct {
 } ctr_blk_t;
 
 bool serialMode = true;
-bool debugMode = false;
+bool debugMode = true;
 
 int triggerPin = 13; 
 
@@ -870,27 +870,26 @@ pinMode(triggerPin, OUTPUT);
 Serial.println("<Arduino is ready>");
 } // end of setup
 
-void loop()
-{ if (Serial.available () > 0) 
- { char inByte = Serial.read ();
-   switch (inByte)
-   { case '\n':   // discard carriage return
-     case '\r':   // discard carriage return
-       break;
-     default:
-       if (input_pos < (MAX_INPUT - 1))  // keep adding if not full ... allow for terminating null byte
-       { input_line [input_pos++] = inByte;
-       }
-       if (input_pos >= MSG_LEN) 
-       { input_line [input_pos] = 0;     // terminating null byte
-         process_data (input_line);
-         input_pos = 0;                  // reset buffer for next time
-       }
-       break;
-     }  // end of switch
- }  // end of incoming data
- // do other stuff here like testing digital input (button presses) ...
-} // end of loop
+void loop() { 
+  if (Serial.available () > 0) { 
+    char inByte = Serial.read ();
+    switch (inByte) { 
+      case '\n':   // discard carriage return
+      case '\r':   // discard carriage return
+      break;
+      default:
+      if (input_pos < (MAX_INPUT - 1)) { 
+        input_line[input_pos++] = inByte;
+      }
+      if (input_pos >= MSG_LEN) { 
+        input_line[input_pos] = 0;  // terminating null byte
+        encrypt(input_line);
+        input_pos = 0;              // reset buffer for next time
+      }
+      break;
+    }
+  }
+}
 
 void process_data (char * data) // here to process incoming serial data after a terminator received
 { Serial.println (data); // for now just display it
@@ -902,8 +901,8 @@ String random_string;
 int low = 97;
 int high = 122;
 
-void encrypt(uint8_t *pt) { 
-  encrypt(pt, cText);
+void encrypt(char* pt) { 
+  encrypt(((uint8_t*) pt), cText);
   
   String cipherText = (char*)cText;
   if(debugMode) {

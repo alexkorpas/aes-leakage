@@ -28,7 +28,7 @@ def read_unit_data(raw_data):
 
 
 class Scope:
-    PREFERRED_USB = "USB0::0x0699::0x0369::C103071::INSTR"
+    PREFERRED_USB = "USB0::0xF4EC::0xEE3A::NDS1MDBC1R0113::INSTR"
     MAX_SAMPLE_SIZE = 2500
     ARDUINO_TIMEOUT = 10
 
