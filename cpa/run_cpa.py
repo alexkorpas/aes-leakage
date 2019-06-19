@@ -23,16 +23,19 @@ if __name__ == '__main__':
     # Our ptexts should be stored in ./../data/1000_ptext.npy
     plaintexts_file = sys.argv[1]
     raw_traces_file = sys.argv[2]
-    used_npy_traces = sys.argv[3]
+    used_npy_traces = bool(sys.argv[3])
 
     # If we used npy files for traces and ptexts, call the attacker right away
     if used_npy_traces:
         ptexts = np.load(plaintexts_file)
-        traces = np.load(traces)
-        ptexts = ptexts[:len(traces)]
+        traces = np.load(raw_traces_file)
+
+        length = min(len(ptexts), len(traces))
+        ptexts = ptexts[:length]
+        traces = traces[:length]
 
         main(ptexts, traces)
-        return
+        exit()
 
     # Convert traces
     traces = []
