@@ -6,13 +6,13 @@ from attacker import Attacker
 
 def main(plaintexts, traces):
     cpa_attacker = Attacker(plaintexts)
-    skey = cpa_attacker.obtain_full_private_key(traces, only_first_byte=True)
+    skey = cpa_attacker.obtain_full_private_key(traces, only_first_byte=False)
 
     # Our AES key:
-    # {166, 40, 136, 9, 43, 171, 174, 207, 79, 210, 21, 22, 247, 60, 126}
+    # [43, 126, 21, 22, 40, 174, 210, 166, 171, 247, 21, 136, 9, 207, 79, 60]
 
-    print(f"First found subkey: {skey[0]}")
-    # print(f"Found full key: {skey}")
+    # print(f"First found subkey: {skey[0]}")
+    print(f"Found full key: {skey}")
 
 
 if __name__ == '__main__':
