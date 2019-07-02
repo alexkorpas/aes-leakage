@@ -13,7 +13,7 @@ from power_read.visa_tools import file_open_append, num_folders
 CH_1 = "CH1"
 CH_2 = "CH2"
 CH_MATH = "MATH"
-DEFAULT_CHANNELS = [CH_1, CH_2, CH_MATH]
+DEFAULT_CHANNELS = [CH_MATH]
 
 PULSE_DURATION = 100  # ms.
 DEFAULT_DATA_ROOT = "../data/output/"
@@ -21,13 +21,14 @@ DEFAULT_DATA_ROOT = "../data/output/"
 
 def read_unit_data(raw_data):
     raw_data = raw_data.split(b"42500", 1)[1]
+
     raw_data = raw_data[:-len(b'\r\n')]
 
-    return struct.unpack(('B' * len(raw_data)), raw_data)
+    return struct.unpack(('b' * len(raw_data)), raw_data)
 
 
 class Scope:
-    PREFERRED_USB = "USB0::0x0699::0x03A5::C050386::INSTR"
+    PREFERRED_USB = "USB0::0xF4EC::0xEE3A::NDS1MDBC1R0113::INSTR"
     MAX_SAMPLE_SIZE = 2500
     ARDUINO_TIMEOUT = 10
 
@@ -62,15 +63,18 @@ class Scope:
     def get_arduino():
         return Arduino()
 
-    def get_traces(self, num_traces=1):
+    def get_traces(self, pts):
         self.arduino.init()
 
-        self.open_files(num_traces)
-        for i in range(num_traces):
-            self.arduino.pulse()
+        self.open_files(10000)
+        i = 0
+        for pt in pts:
+            i += 1
+
+            self.arduino.send_msg(pt)
             timeout_start = time.time()
 
-            print("Sending pulse, waiting for trigger...")
+            print(f"Sending '{pt}', waiting for trigger...")
             while not self.trigger_active():
                 if (time.time() - timeout_start) > self.ARDUINO_TIMEOUT:
                     print("Timeout! Terminating...")
@@ -80,7 +84,7 @@ class Scope:
             print("Triggered!")
             curr_acquisitions = self.get_num_acquisitions()
 
-            print(f"Capturing trace_100 ({i+1}/{num_traces}), acq = {curr_acquisitions}.")
+            print(f"Capturing trace_100 ({i+1}/{10000}), acq = {curr_acquisitions}.")
             self.write_trace()
 
         self.close_files()
@@ -118,8 +122,8 @@ class Scope:
         ch1 = self.read_channel()
 
         print()
-        print(f"Length of trace_100: {len(ch1)}.")
-        print(f"StDev of trace_100: {stdev(ch1)}.")
+        print(f"Length of trace: {len(ch1)}.")
+        print(f"StDev of trace: {stdev(ch1)}.")
 
     def write_trace(self):
         for channel in self.trace_files:
@@ -143,7 +147,7 @@ class Scope:
             self.trace_files = {}
             for channel in self.record_channels:
                 channel_low = channel.lower()
-                self.trace_files[channel] = file_open_append(self.data_dir, f"trace_{channel_low}{num_traces}")
+                self.trace_files[channel] = file_open_append(self.data_dir, f"trace_{channel_low}_{num_traces}")
 
     def close_files(self):
         for channel in self.trace_files:
@@ -157,4 +161,7 @@ class Scope:
 
 if __name__ == '__main__':
     scope = Scope()
-    scope.get_traces()
+    with open('../data/input/10000_plaintexts', 'r') as file:
+        pts = [line.split(';')[1].encode() for line in file]
+
+    scope.get_traces(pts)

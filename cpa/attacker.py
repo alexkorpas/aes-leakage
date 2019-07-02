@@ -31,7 +31,7 @@ class Attacker:
         for i in range(16):
             self.subkey_corr_coeffs[i] = {}
 
-    def obtain_full_private_key(self, power_samples):
+    def obtain_full_private_key(self, power_samples, only_first_byte=False):
         """Computes the full private key used in AES128 by computing each of
         its 16 subkeys. This is done with power samples produced by encryption
         of known plaintexts.
@@ -50,7 +50,8 @@ class Attacker:
         block_nr = 0  # It doesn't matter which plaintext block we look at
 
         final_subkeys = []  # 16 subkeys of 8 bits each, as integers
-        for subkey_nr in range(0, 16):
+        amnt_of_subkeys = 1 if only_first_byte else 16
+        for subkey_nr in range(0, amnt_of_subkeys):
             print(f"Starting to obtain subkey {subkey_nr}!")
             subkey = self.find_used_subkey(power_samples, block_nr, subkey_nr)
             print(f"Found subkey nr {subkey_nr}: {subkey}")
@@ -83,14 +84,15 @@ class Attacker:
         best_subkey_pcc = 0
 
         for subkey_guess in self.POSSIBLE_SUBKEYS:
-            # print(f"Trying subkey {subkey_guess} for PT byte {subkey_byte_index}...")
+            if subkey_guess in [64, 128, 192, 256]:
+                print(f"Computing PCC for subkey guess {subkey_guess}...")
 
             # For each plaintext, compute the modeled consumption for
             # encrypting it with one of the guessed subkeys.
             subkey_guess_consumptions = []
 
             # Compute the simulated subkey consumptions for each plaintext
-            for i in range(len(self.plaintexts)):
+            for i in range(len(power_samples)):
                 # Define the location we're attacking in the full plaintext
                 subplaintext = self.plaintexts[i][subkey_byte_index]
 
@@ -103,7 +105,7 @@ class Attacker:
 
             # Find out the correlation between the modeled consumptions and the
             # actual consumptions by computing correlation values for each
-            # subkey guess. 
+            # subkey guess.
             numpoint = len(power_samples[0])
             # For each point, keep track of the sum and both denominators in
             # the correlation function computed as
@@ -141,6 +143,16 @@ class Attacker:
                 best_subkey = subkey_guess
                 best_subkey_pcc = pcc
 
+        subkey_guess_corr_coeffs = self.subkey_corr_coeffs[subkey_byte_index]
+        sorted_coeffs = [
+            (key, subkey_guess_corr_coeffs[key])
+            for key
+            in sorted(subkey_guess_corr_coeffs,
+                      key=subkey_guess_corr_coeffs.get,
+                      reverse=True)
+        ]
+        best_subkeys = [pair[0] for pair in sorted_coeffs]
+        print(f"Top 10 subkeys for subbyte {subkey_byte_index}:\n{best_subkeys[:10]}")
         return best_subkey
 
     def pearson_correlation_coeff(self, actual_consumptions,
@@ -189,14 +201,3 @@ class Attacker:
         pcc = sumnum / np.sqrt(sumden1 * sumden2)
 
         return pcc
-
-    def extract_subbytes_trace_points(self, power_trace):
-        """Given a list of points from an AES128 power trace, this method
-        locates and extracts the points that correspond to the subBytes step
-        in the first round of the algorithm.
-
-        Returns:
-            [float] -- A subset of the given points' values that correspond to
-            the consumption values during the subBytes step in the first round.
-        """
-        return []

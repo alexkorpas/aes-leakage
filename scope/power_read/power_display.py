@@ -7,7 +7,7 @@ OUTPUT_PLOT = "../data/images/trace.png"
 
 
 def trace_parser(trace_line):
-    trace_line = trace_line[1:len(trace_line) - 2]
+    trace_line = trace_line[1:len(trace_line) - 1]
     return [int(x) for x in trace_line.split(",")]
 
 
