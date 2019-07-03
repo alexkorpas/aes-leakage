@@ -7,15 +7,15 @@ from attacker import Attacker
 
 # For several amounts of traces, test the guessing entropy with which the CPA
 # attacker is able to guess the first subkey.
-TRACES_AMOUNTS = [1, 10, 100, 1000]
-TEST_DATA_LOC = "./../test_data"
+TRACES_AMOUNTS = [6, 12, 24, 48, 96, 192, 384, 768]
+TEST_DATA_LOC = "./input"
 
 # Load the 1000 required plaintexts
 # plaintexts = np.load("./../data/1000_ptext.npy")  # Our implementation's ptexts
-plaintexts = np.load(f"{TEST_DATA_LOC}/plain.npy")
+plaintexts = np.load(f"{TEST_DATA_LOC}/no-cm/plaintexts_converted.npy")
 
 # Load the given ChipWhisperer test traces if we use them
-cw_traces = np.load(f"{TEST_DATA_LOC}/traces.npy")
+cw_traces = np.load(f"{TEST_DATA_LOC}/")
 
 cpa_attacker = Attacker(plaintexts)
 atk_analyser = AttackAnalyser()
@@ -38,7 +38,7 @@ for trace_amnt in TRACES_AMOUNTS:
         traces = cw_traces[:trace_amnt]
 
     # If we only obtain the first subkey, it is returned as a singleton list.
-    skey = cpa_attacker.obtain_full_private_key(traces, only_first_byte=True)
+    skey = cpa_attacker.obtain_full_private_key(traces, only_first_byte=False)
 
     # Compute and store the first subkey's guessing entropy
     known_first_subkey = 43
