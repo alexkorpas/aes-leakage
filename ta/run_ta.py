@@ -7,32 +7,32 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-# Load data
-traces = np.load('data/traces.npy')
-ptext = np.load('data/plain.npy')
-key = np.load('data/key.npy')
-
-tempTraces = traces[:9000]
-tempPText = ptext[:9000]
-tempKey = key[:9000]
-atkTraces = traces[-500:]
-atkPText = ptext[-500:]
-atkKey = key[-500:]
-
-TEMPLATE_SIZES = [1000, 2000, 3000, 4000, 5000]
+TEMPLATE_SIZES = [10000, 15000, 20000]
 ATTACK_SIZES = [50, 100, 200, 400]
 SAMPLE_STEPS = [1, 2, 3]
 ITERATIONS = 10
-# TEMPLATE_SIZES = [9000]
-# ATTACK_SIZES = [50]
-# SAMPLE_STEPS = [1]
 ITERATIONS = 1
 TOTAL_EXPIREMENTS = len(TEMPLATE_SIZES) * len(ATTACK_SIZES) * \
                     len(SAMPLE_STEPS) * ITERATIONS
+CM = False
 
-
+if CM:
+    CM_DIR = "cm"
+else:
+    CM_DIR = "no-cm"
 results = pd.DataFrame(columns=['TEMPLATE_SIZE', 'ATTACK_SIZE', 'SAMPLE_STEP',
                                 'GE', 'KEY_SR', 'SUBKEY_SR'], dtype=int)
+traces = np.load(f'data/{CM_DIR}/traces.npy')
+ptext = np.load(f'data/{CM_DIR}/plain.npy')
+key = np.load(f'data/{CM_DIR}/key.npy')
+
+tempTraces = traces[:20000]
+tempPText = ptext[:20000]
+tempKey = key[:20000]
+atkTraces = traces[-1000:]
+atkPText = ptext[-1000:]
+atkKey = key[-1000:]
+
 
 known_key = atkKey[0]
 
