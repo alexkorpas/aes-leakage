@@ -56,6 +56,11 @@ def run(temp_traces_path="./../test_data/ta_traces.npy",
     tempPText  = np.load(temp_ptexts_path)
     tempKey    = np.load(temp_keys_path)
 
+    size = min(len(tempTraces), len(tempPText))
+    tempTraces = tempTraces[:size]
+    tempPText = tempPText[:size]
+    tempKey = tempKey[:size]
+
     #print(tempPText
     #print(len(tempPText)
     #print(tempKey
@@ -176,6 +181,16 @@ def run(temp_traces_path="./../test_data/ta_traces.npy",
 
     # print(our top 5 results so far
     # Best match on the right
-    # print(P_k.argsort()[-5:])
+    print(P_k.argsort()[-10:])
 
     return subkey_corr_coeffs
+
+if __name__ == "__main__":
+    TEST_DATA_LOC = "./../test_data/"
+    temp_traces = TEST_DATA_LOC + "traces.npy"
+    temp_plaintexts = TEST_DATA_LOC + "plain.npy"
+    temp_key = TEST_DATA_LOC + "key.npy"
+    atk_traces = np.load(TEST_DATA_LOC + "traces.npy")[:100]
+    atk_plaintexts = np.load(TEST_DATA_LOC + "plain.npy")[:100]
+
+    corr_coeffs = run(temp_traces, temp_plaintexts, temp_key, atk_traces=atk_traces, atk_ptexts=atk_plaintexts)
