@@ -55,7 +55,7 @@ class Arduino:
     def close(self):
         self.ser.close()
 
-    def send_on_file_change(self, dir_name="../data/traces", num_traces=1000):
+    def run_acquisition_loop(self, dir_name="../data/traces", num_traces=1000):
         print(f"Waiting for dummy file to be created in '{dir_name}'...")
         dummy_file = hold_for_file_changes(dir_name)
         for file in dummy_file:
@@ -117,9 +117,3 @@ def hold_for_file_changes(dir_name, timeout=0):
             raise TimeoutError()
 
     return changed_files
-
-
-if __name__ == '__main__':
-    a = Arduino()
-    # a.test_loop()
-    a.send_on_file_change()
