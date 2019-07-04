@@ -1,0 +1,13 @@
+﻿1 | 83 | 78 | 500 | Left Click Down
+2 | 83 | 78 | 111 | Left Click Release
+3 | 317 | 69 | 1250 | Left Click Down
+4 | 317 | 69 | 95 | Left Click Release
+5 | 499 | 309 | 300 | Left Click Down
+6 | 499 | 309 | 80 | Left Click Release
+7 | 510 | 354 | 100 | Left Click Down
+8 | 509 | 354 | 78 | Left Click Release
+9 | 809 | 523 | 100 | Left Click Down
+10 | 809 | 523 | 96 | Left Click Release
+11 | 809 | 523 | 300 | Keypress Ctrl+ | v
+12 | 986 | 701 | 100 | Left Click Down
+13 | 986 | 700 | 80 | Left Click Release

@@ -7,5 +7,5 @@ def extract(filename):
         copyfile(f"./{filename}", f"./{filename}.exe")
 
 
-extract("EasyScopeX_setup")
+extract("EasyScopeX_setup") # https://mediacdn.eu/mage/media/wysiwyg/siglent/Downloads/Software/EasyScopeX_V100R001B02D01P20.zip
 extract("MiniMouseMacro")
