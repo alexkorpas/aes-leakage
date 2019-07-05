@@ -8,10 +8,9 @@ import matplotlib.pyplot as plt
 
 
 TEMPLATE_SIZES = [10000, 15000, 20000]
-ATTACK_SIZES = [50, 100, 200, 400]
+ATTACK_SIZES = [25, 50, 75, 100]
 SAMPLE_STEPS = [1, 2, 3]
 ITERATIONS = 10
-ITERATIONS = 1
 TOTAL_EXPIREMENTS = len(TEMPLATE_SIZES) * len(ATTACK_SIZES) * \
                     len(SAMPLE_STEPS) * ITERATIONS
 CM = False
@@ -41,29 +40,30 @@ i = 0
 for _ in range(ITERATIONS):
     for temp_size in TEMPLATE_SIZES:
         for step in SAMPLE_STEPS:
-            print(f"Experiment {i+1}/{TOTAL_EXPIREMENTS}(sample step: {step})")
             temp_indices = np.random.choice(
                 np.arange(len(tempTraces)), temp_size, replace=False)
 
             sampled_tempTraces = tempTraces[temp_indices, ::step]
-            sampled_tempPText = tempPText[temp_indices, ::step]
-            sampled_tempKey = tempKey[temp_indices, ::step]
+            sampled_tempPText = tempPText[temp_indices, :]
+            sampled_tempKey = tempKey[temp_indices, :]
 
-            ta = TAAttacker(20, pooled=False)
+            ta = TAAttacker(5, pooled=False)
             print(f"Profiling using {temp_size} traces...")
             ta.profile(sampled_tempTraces, sampled_tempPText, sampled_tempKey)
 
             for atk_size in ATTACK_SIZES:
+                print(f"Experiment {i+1}/{TOTAL_EXPIREMENTS}(sample step: {step})")
+
                 atk_indices = np.random.choice(
                     np.arange(len(atkTraces)), atk_size, replace=False)
                 sampled_atkTraces = atkTraces[atk_indices, ::step]
-                sampled_atkPText = atkPText[atk_indices, ::step]
+                sampled_atkPText = atkPText[atk_indices, :]
 
                 # try:
                 print(f"Attacking using {atk_size} traces...")
                 refs = ta.attack(sampled_atkTraces, sampled_atkPText)
                 best_guess = ta.bestguess
- 
+
                 ge = guessing_entropy(known_key, refs)
                 key_sr = int(ge == 0)
                 subkey_sr = subkey_success_rate(
