@@ -35,9 +35,9 @@ void loop() {
     in = char(Serial.read());
     Serial.println(in);
     
-    if(in == "p") {
+    if(in == "e") {
       pulse();
-    } else if(in == "i") {
+    } else if(in == "r") {
       start();
     }
   }
