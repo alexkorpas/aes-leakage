@@ -1,9 +1,7 @@
 import unittest
 
-from arduino import arduino
-from power_read import visa_tools
 from power_read.power_display import PowerReport
-from power_read.scope import Scope, read_unit_data, CH_2
+from power_read.scope import read_unit_data
 
 
 def read_raw(scope, channel):

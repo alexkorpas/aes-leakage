@@ -1,12 +1,12 @@
 import unittest
 
-from arduino import arduino
+from arduino.arduino import Arduino
 
 
 class ArduinoTest(unittest.TestCase):
     def test_init(self):
-        arduino.init()
-        arduino.test_loop()
+        a = Arduino()
+        a.run_acquisition_loop()
 
         self.assertTrue(True)
 

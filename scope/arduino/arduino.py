@@ -7,6 +7,7 @@ import pyperclip as pyperclip
 import serial
 
 import sys
+
 sys.path.append("../")
 from easy_scope.mouse_macro import start_macro
 
@@ -93,8 +94,8 @@ class Arduino:
                         exception = False
                     except PermissionError:
                         time.sleep(.5)
-            
-            
+
+
 def get_files(folder):
     return dict([(f, None) for f in os.listdir(folder)])
 

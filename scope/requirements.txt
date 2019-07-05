@@ -1,0 +1,9 @@
+visa
+pandas
+matplotlib
+pyvisa
+pyautogui
+tqdm
+numpy
+pyperclip
+serial
