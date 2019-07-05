@@ -83,3 +83,12 @@ class AttackAnalyser:
                 return i
 
         raise ValueError(f"Key {int_key} was not found in the list of pairs.")
+
+    def compute_key_success_rate(self, known_key, guess):
+        return int(known_key == guess)
+
+    def compute_subkey_success_rate(self, known_key, guess):
+        size = len(known_key)
+        correct = sum([1 for i in range(size) if known_key[i] == guess[i]])
+
+        return correct / size
